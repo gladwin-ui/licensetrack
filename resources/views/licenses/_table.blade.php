@@ -53,11 +53,11 @@
                         $remaining = max(0, min($totalDays, $days));
                         $progress = (int) round(($remaining / $totalDays) * 100);
                         $status = [
-                            'aman'    => ['badge' => 'bg-green-50 border-green-200 text-green-700', 'dot' => 'bg-green-500', 'label' => 'Aman'],
-                            'waspada' => ['badge' => 'bg-yellow-50 border-yellow-200 text-yellow-700', 'dot' => 'bg-yellow-500', 'label' => 'Waspada'],
-                            'kritis'  => ['badge' => 'bg-orange-50 border-orange-200 text-orange-700', 'dot' => 'bg-orange-500', 'label' => 'Kritis'],
-                            'expired' => ['badge' => 'bg-red-50 border-red-200 text-red-700', 'dot' => 'bg-red-500', 'label' => 'Expired'],
-                        ][$health] ?? ['badge' => 'bg-gray-50 border-gray-200 text-gray-700', 'dot' => 'bg-gray-400', 'label' => ucfirst($health)];
+                            'aman'    => ['class' => 'text-green-600 font-bold', 'label' => 'Aman'],
+                            'waspada' => ['class' => 'text-yellow-600 font-bold', 'label' => 'Waspada'],
+                            'kritis'  => ['class' => 'text-orange-600 font-bold', 'label' => 'Kritis'],
+                            'expired' => ['class' => 'text-red-600 font-bold', 'label' => 'Expired'],
+                        ][$health] ?? ['class' => 'text-gray-600 font-bold', 'label' => ucfirst($health)];
 
                         if ($primaryContact) {
                             $colors = [
@@ -103,17 +103,6 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex flex-col gap-1 mb-1.5">
-                                @if ($days <= 7 && $days > 0)
-                                    <span class="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 animate-pulse">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                                        Mendesak!
-                                    </span>
-                                @elseif ($days <= 0)
-                                    <span class="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                                        Expired
-                                    </span>
-                                @endif
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="font-bold text-xs {{ $days <= 0 ? 'text-red-600' : ($days <= 7 ? 'text-red-600' : ($days <= 30 ? 'text-orange-600' : ($days <= 90 ? 'text-yellow-600' : 'text-green-600'))) }}">
                                         {{ abs($days) }} <span class="font-normal text-gray-400">{{ $days >= 0 ? 'hari' : 'hari lalu' }}</span>
@@ -126,8 +115,7 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border {{ $status['badge'] }}">
-                                <span class="h-1.5 w-1.5 rounded-full {{ $status['dot'] }}"></span>
+                            <span class="text-xs {{ $status['class'] }}">
                                 {{ $status['label'] }}
                             </span>
                         </td>

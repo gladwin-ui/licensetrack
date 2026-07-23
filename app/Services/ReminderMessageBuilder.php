@@ -56,7 +56,7 @@ class ReminderMessageBuilder
     {
         Carbon::setLocale('id');
 
-        $companyName = setting('reminder_company_name', setting('company_name', config('reminder.company_name', 'PT Hariff Daya Tunggal Engineering')));
+        $companyName = setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada'));
         $picName = $contact->name;
         $licenseName = $license->name;
 

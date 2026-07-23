@@ -30,10 +30,10 @@
                 <span class="otp-code">{{ $otpCode }}</span>
             </div>
 
-            <p class="note">Kode ini rahasia, berlaku selama <strong>10 menit</strong>, dan hanya dapat digunakan satu kali. Jangan berikan kode ini kepada siapa pun, termasuk staf PT Hariff.</p>
+            <p class="note">Kode ini rahasia, berlaku selama <strong>10 menit</strong>, dan hanya dapat digunakan satu kali. Jangan berikan kode ini kepada siapa pun, termasuk staf {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}.</p>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} LicenseTrack &middot; PT Hariff Daya Tunggal Engineering
+            &copy; {{ date('Y') }} LicenseTrack &middot; {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}
         </div>
     </div>
 </body>

@@ -21,6 +21,16 @@
             </svg>
         </button>
 
+        {{-- Desktop Sidebar Collapse Toggle Button --}}
+        <button type="button" @click="toggleSidebar()" 
+                class="hidden lg:flex items-center justify-center p-2 rounded-xl text-slate-500 bg-slate-50 hover:bg-slate-100 hover:text-slate-700 border border-slate-200/80 shadow-xs transition active:scale-95 shrink-0" 
+                title="Buka/Tutup Sidebar (Sidebar Toggle)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path x-show="!sidebarCollapsed" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                <path x-show="sidebarCollapsed" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+            </svg>
+        </button>
+
         @if (isset($header))
             <div class="flex-1">
                 {{ $header }}
@@ -84,7 +94,7 @@
                         </div>
                         <div class="hidden md:block text-left pr-1">
                             <p class="text-xs font-bold text-slate-800 leading-tight truncate max-w-[120px]">{{ Auth::user()->name }}</p>
-                            <p class="text-[10px] font-medium text-slate-400">PT Hariff Dipa</p>
+                            <p class="text-[10px] font-medium text-slate-400 truncate max-w-[120px]" title="{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}">{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</p>
                         </div>
                         <svg class="h-4 w-4 text-slate-400 hidden md:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />

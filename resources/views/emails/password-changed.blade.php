@@ -32,10 +32,10 @@
                 <strong>Apakah ini Anda?</strong> Jika Anda baru saja melakukan perubahan ini, Anda dapat mengabaikan email ini dengan aman. Namun, jika Anda tidak merasa melakukan tindakan ini, harap hubungi administrator jaringan segera untuk mengamankan akun Anda.
             </div>
 
-            <p class="note">Email notifikasi ini dikirimkan secara otomatis demi menjaga keamanan data perusahaan PT Hariff.</p>
+            <p class="note">Email notifikasi ini dikirimkan secara otomatis demi menjaga keamanan data perusahaan {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}.</p>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} LicenseTrack &middot; PT Hariff Daya Tunggal Engineering
+            &copy; {{ date('Y') }} LicenseTrack &middot; {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}
         </div>
     </div>
 </body>

@@ -56,37 +56,43 @@
 @endphp
 
 {{-- DESKTOP DARK SIDEBAR --}}
-<aside class="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 bg-[#0B0F19] text-white shadow-xl z-30 transition-all duration-300">
+<aside class="hidden lg:flex lg:flex-col lg:flex-shrink-0 bg-[#0B0F19] text-white shadow-xl z-30 transition-all duration-300"
+       :class="sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'">
     {{-- Brand / Logo --}}
-    <div class="flex items-center gap-3 px-6 h-20 border-b border-slate-800/80">
+    <div class="flex items-center gap-3 h-20 border-b border-slate-800/80 transition-all duration-300"
+         :class="sidebarCollapsed ? 'justify-center px-2' : 'px-6'">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
             <img src="{{ asset('logo cuma diamond.png') }}" alt="LicenseTrack Logo" class="w-9 h-9 object-contain flex-shrink-0 rounded-xl shadow-md group-hover:scale-105 transition-transform">
-            <div>
+            <div x-show="!sidebarCollapsed" x-transition.opacity class="transition-all duration-300">
                 <h1 class="font-bold text-lg leading-tight tracking-tight text-white group-hover:text-red-400 transition-colors">LicenseTrack</h1>
-                <p class="text-[11px] text-slate-400">PT Hariff Dipa Persada</p>
+                <p class="text-[11px] text-slate-400 truncate max-w-[150px]" title="{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}">{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</p>
             </div>
         </a>
     </div>
 
     {{-- Navigation Menu --}}
-    <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        <p class="px-3 text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-3">Menu Utama</p>
+    <nav class="flex-1 py-6 space-y-1.5 overflow-y-auto transition-all duration-300"
+         :class="sidebarCollapsed ? 'px-2' : 'px-4'">
+        <p x-show="!sidebarCollapsed" x-transition.opacity class="px-3 text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-3 transition-all duration-300">Menu Utama</p>
         
         @foreach ($items as $item)
             @if ($loop->index === 3)
-                <p class="px-3 text-[10px] font-bold text-slate-500 tracking-widest uppercase pt-6 mb-3">Konfigurasi & Sistem</p>
+                <p x-show="!sidebarCollapsed" x-transition.opacity class="px-3 text-[10px] font-bold text-slate-500 tracking-widest uppercase pt-6 mb-3 transition-all duration-300">Konfigurasi & Sistem</p>
+                <div x-show="sidebarCollapsed" class="h-px bg-slate-800/80 my-4 mx-3"></div>
             @endif
 
             <a href="{{ route($item['route']) }}" 
-               class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-bold text-sm transition-all group {{ $item['active'] ? 'bg-white text-slate-900 shadow-lg shadow-white/10' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+               :title="sidebarCollapsed ? '{{ $item['label'] }}' : ''"
+               :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
+               class="flex items-center gap-3.5 rounded-2xl font-bold text-sm transition-all duration-300 group {{ $item['active'] ? 'bg-white text-slate-900 shadow-lg shadow-white/10' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition {{ $item['active'] ? 'bg-orange-100 text-orange-600' : 'bg-slate-800/60 group-hover:bg-slate-700/80 text-slate-400 group-hover:text-white' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                     </svg>
                 </div>
-                <span>{{ $item['label'] }}</span>
+                <span x-show="!sidebarCollapsed" x-transition.opacity class="transition-all duration-300">{{ $item['label'] }}</span>
                 @if (isset($item['badge']) && $item['badge'] !== null)
-                    <span class="ml-auto text-xs px-2.5 py-0.5 rounded-full font-mono font-bold {{ $item['active'] ? 'bg-slate-900 text-white' : 'bg-slate-800 text-slate-300' }}">
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="ml-auto text-xs px-2.5 py-0.5 rounded-full font-mono font-bold {{ $item['active'] ? 'bg-slate-900 text-white' : 'bg-slate-800 text-slate-300' }} transition-all duration-300">
                         {{ $item['badge'] }}
                     </span>
                 @endif
@@ -94,41 +100,44 @@
         @endforeach
     </nav>
 
-    {{-- Bottom Gateway Info --}}
-    <div class="p-4 m-4 rounded-2xl bg-slate-800/60 border border-slate-700/50">
-        <div class="flex items-center gap-3">
-            <span class="w-2.5 h-2.5 rounded-full {{ $gatewayDot }} {{ $gatewayFilled && $gateway !== 'log' ? 'animate-pulse' : '' }}"></span>
-            <div>
-                <p class="text-xs font-semibold text-white">{{ strtoupper($gateway) }} GATEWAY</p>
-                <p class="text-[11px] text-slate-400">WhatsApp Gateway {{ $gatewayFilled && $gateway !== 'log' ? 'Aktif' : 'Non-aktif / Log' }}</p>
-            </div>
-        </div>
-        <div class="mt-3 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-300">
-            <span>Pesan Terkirim Hari Ini</span>
-            <span class="font-bold font-mono text-emerald-400">{{ $sentToday }}</span>
-        </div>
-    </div>
-
     {{-- User Info + Logout (Desktop Sidebar) --}}
-    <div class="px-4 pb-4">
-        <div class="flex items-center gap-3 px-3 py-3 rounded-2xl bg-slate-800/80 border border-slate-700/60">
+    <div class="pb-4 transition-all duration-300"
+         :class="sidebarCollapsed ? 'px-2' : 'px-4'">
+        <div class="flex items-center gap-3 py-3 rounded-2xl bg-slate-800/80 border border-slate-700/60 transition-all duration-300"
+             :class="sidebarCollapsed ? 'justify-center px-1' : 'px-3'">
             {{-- Avatar --}}
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-700 text-white font-extrabold flex items-center justify-center text-sm shrink-0 shadow">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-700 text-white font-extrabold flex items-center justify-center text-sm shrink-0 shadow"
+                 :title="sidebarCollapsed ? '{{ Auth::user()->name }} ({{ Auth::user()->email }})' : ''">
                 {{ substr(Auth::user()->name ?? 'U', 0, 1) }}
             </div>
             {{-- Name --}}
-            <div class="flex-1 min-w-0">
+            <div x-show="!sidebarCollapsed" x-transition.opacity class="flex-1 min-w-0 transition-all duration-300">
                 <p class="text-xs font-semibold text-white truncate">{{ Auth::user()->name }}</p>
                 <p class="text-[10px] text-slate-400 truncate">{{ Auth::user()->email }}</p>
             </div>
             {{-- Logout button --}}
-            <form method="POST" action="{{ route('logout') }}" class="shrink-0">
+            <form method="POST" action="{{ route('logout') }}" class="shrink-0"
+                  :class="sidebarCollapsed ? 'hidden' : 'block'">
                 @csrf
                 <button type="submit"
                         title="Keluar"
                         class="flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+        
+        {{-- Collapsed Logout Button --}}
+        <div x-show="sidebarCollapsed" class="mt-2 flex justify-center">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                        title="Keluar"
+                        class="flex items-center justify-center w-8 h-8 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 bg-slate-800/60 border border-slate-700/50 transition">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                     </svg>
                 </button>
             </form>
@@ -178,7 +187,7 @@
             <img src="{{ asset('logo cuma diamond.png') }}" alt="LicenseTrack Logo" class="w-9 h-9 object-contain flex-shrink-0 rounded-xl shadow-md">
             <div>
                 <h1 class="font-bold text-lg leading-tight tracking-tight text-white">LicenseTrack</h1>
-                <p class="text-[11px] text-slate-400">PT Hariff Dipa Persada</p>
+                <p class="text-[11px] text-slate-400 truncate max-w-[150px]" title="{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}">{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</p>
             </div>
         </div>
 

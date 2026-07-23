@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ isset($title) ? $title . ' - ' : '' }}LicenseTrack</title>
+        <title>{{ isset($title) ? $title . ' — ' : '' }}LicenseTrack | {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</title>
         <link rel="icon" type="image/png" href="{{ asset('logo cuma diamond.png') }}">
 
         <!-- Fonts (Figtree & Plus Jakarta Sans) -->
@@ -22,7 +22,15 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased text-sm text-slate-800 h-full bg-[#F8FAFC]" x-data="{ mobileSidebarOpen: false }">
+    <body class="font-sans antialiased text-sm text-slate-800 h-full bg-[#F8FAFC]" 
+          x-data="{ 
+              mobileSidebarOpen: false,
+              sidebarCollapsed: localStorage.getItem('sidebar_collapsed') === 'true',
+              toggleSidebar() {
+                  this.sidebarCollapsed = !this.sidebarCollapsed;
+                  localStorage.setItem('sidebar_collapsed', this.sidebarCollapsed);
+              }
+          }">
         <div class="flex h-screen overflow-hidden bg-[#F8FAFC]">
             {{-- Navigation includes Desktop Dark Sidebar & Mobile Slide-over --}}
             @include('layouts.navigation')
@@ -78,7 +86,7 @@
                     </main>
 
                     <footer class="max-w-none mx-auto w-full px-6 sm:px-8 py-6 text-xs text-slate-400 border-t border-slate-200/60 flex items-center justify-between">
-                        <span>LicenseTrack · PT Hariff Dipa Persada · v1.0</span>
+                        <span>LicenseTrack · {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }} · v1.0</span>
                         <span>Sistem Pemantauan Lisensi & Gateway Reminder</span>
                     </footer>
                 </div>

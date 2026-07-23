@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Terima Undangan Administrator - LicenseTrack</title>
+    <title>Terima Undangan Administrator — LicenseTrack | {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</title>
     <link rel="icon" type="image/png" href="{{ asset('logo cuma diamond.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,8 +19,10 @@
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden flex flex-col md:flex-row min-h-[540px]">
         
         <!-- Left Panel: Visual -->
-        <div class="hidden md:flex md:w-[42%] bg-gradient-to-br from-slate-900 via-slate-950 to-black p-10 flex-col justify-between relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10">
+        <div class="hidden md:flex md:w-[42%] bg-cover bg-center p-10 flex-col justify-between relative overflow-hidden" style="background-image: url('{{ asset('foto_gedung.avif') }}');">
+            <!-- Dark gradient overlay for readability -->
+            <div class="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-950/80 to-black z-0"></div>
+            <div class="absolute inset-0 opacity-10 z-0">
                 <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
                     <defs>
                         <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -30,12 +32,12 @@
                     <rect width="100%" height="100%" fill="url(#grid)" />
                 </svg>
             </div>
-            <div class="absolute -top-40 -left-40 w-96 h-96 bg-red-600/10 rounded-full blur-3xl"></div>
+            <div class="absolute -top-40 -left-40 w-96 h-96 bg-red-600/10 rounded-full blur-3xl z-0"></div>
 
             <div class="relative z-10">
                 <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-lg px-3 py-1.5 border border-white/10">
                     <img src="{{ asset('logo cuma diamond.png') }}" alt="Hariff" class="w-4 h-4 object-contain brightness-110">
-                    <span class="text-[10px] font-bold text-white tracking-widest uppercase">HARIFF DEFENSE</span>
+                    <span class="text-[10px] font-bold text-white tracking-widest uppercase">HARIFF DIPA PERSADA</span>
                 </div>
             </div>
 
@@ -43,7 +45,7 @@
                 <div>
                     <h2 class="text-2xl font-bold text-white tracking-tight">Terima Undangan</h2>
                     <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                        Bergabunglah sebagai administrator sistem pengingat kedaluwarsa lisensi PT Hariff.
+                        Bergabunglah sebagai administrator sistem pengingat kedaluwarsa lisensi {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}.
                     </p>
                 </div>
             </div>
@@ -258,7 +260,7 @@
             </div>
 
             <div class="pt-6 mt-6 border-t border-slate-100 text-center text-xs text-slate-400">
-                Pendaftaran diatur sepenuhnya oleh kebijakan keamanan internal PT Hariff.
+                Pendaftaran diatur sepenuhnya oleh kebijakan keamanan internal {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}.
             </div>
         </div>
 

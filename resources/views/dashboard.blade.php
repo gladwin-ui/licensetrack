@@ -201,7 +201,7 @@
                                     <th class="pb-3 px-4">PIC Utama</th>
                                     <th class="pb-3 px-4">Tgl. Berakhir</th>
                                     <th class="pb-3 px-4 text-center">Status</th>
-                                    <th class="pb-3 pl-4 text-center">Urgency & Sisa Hari</th>
+                                    <th class="pb-3 pl-4 text-center">Sisa Hari</th>
                                     <th class="pb-3 pl-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -215,16 +215,16 @@
                                         $remaining = max(0, min($totalDays, $days));
                                         $progress = (int) round(($remaining / $totalDays) * 100);
                                         $badgeClass = match($health) {
-                                            'aman'    => 'bg-emerald-100 text-emerald-800 border border-emerald-200/60',
-                                            'waspada' => 'bg-yellow-100 text-yellow-800 border border-yellow-200/60',
-                                            'kritis'  => 'bg-orange-100 text-orange-800 border border-orange-200/60',
-                                            'expired' => 'bg-red-100 text-red-800 border border-red-200/60',
+                                            'aman'    => 'text-emerald-600 font-bold',
+                                            'waspada' => 'text-yellow-600 font-bold',
+                                            'kritis'  => 'text-orange-600 font-bold',
+                                            'expired' => 'text-red-600 font-bold',
                                         };
                                         $badgeLabel = match($health) {
-                                            'aman'    => '🟢 Aman',
-                                            'waspada' => '🟡 Waspada',
-                                            'kritis'  => '🟠 Kritis',
-                                            'expired' => '🔴 Expired',
+                                            'aman'    => 'Aman',
+                                            'waspada' => 'Waspada',
+                                            'kritis'  => 'Kritis',
+                                            'expired' => 'Expired',
                                         };
                                     @endphp
                                     <tr class="hover:bg-gray-50 transition-colors group">
@@ -263,27 +263,16 @@
                                             {{ $license->end_date->format('d/m/Y') }}
                                         </td>
 
-                                        {{-- Status Health Capsule --}}
+                                        {{-- Status Health --}}
                                         <td class="py-4 px-4 text-center">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ $badgeClass }}">
+                                            <span class="text-xs {{ $badgeClass }}">
                                                 {{ $badgeLabel }}
                                             </span>
                                         </td>
 
-                                        {{-- Urgency Progress Bar & Sisa Hari --}}
+                                        {{-- Sisa Hari --}}
                                         <td class="py-4 pl-4 text-center">
                                             <div class="flex flex-col items-center justify-center gap-1 max-w-[130px] mx-auto">
-                                                @if ($days <= 7 && $days > 0)
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 animate-pulse">
-                                                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                                                        Mendesak!
-                                                    </span>
-                                                @elseif ($days <= 0)
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
-                                                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                                                        Expired
-                                                    </span>
-                                                @endif
                                                 <div>
                                                     <span class="font-bold text-xs {{ $days <= 0 ? 'text-red-600' : ($days <= 7 ? 'text-red-600' : ($days <= 30 ? 'text-orange-600' : ($days <= 90 ? 'text-yellow-600' : 'text-emerald-600'))) }}">
                                                         {{ abs($days) }}
@@ -339,7 +328,7 @@
             </div>
 
             {{-- RIGHT 1 COLUMN: Donut Chart & Upcoming Reminder --}}
-            <div class="space-y-8 flex flex-col">
+            <div class="space-y-8 flex flex-col self-start w-full">
                 
                 {{-- Donut Chart Card --}}
                 <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-slate-200/70 flex flex-col items-center">

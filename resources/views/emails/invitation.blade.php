@@ -28,7 +28,7 @@
             <h1 class="title">Undangan Registrasi Akun</h1>
             <p class="greeting">Halo, {{ $invitation->name }}</p>
             <p class="body-text">
-                Anda telah diundang untuk bergabung sebagai **Administrator** di sistem internal **LicenseTrack - PT Hariff Daya Tunggal Engineering**.
+                Anda telah diundang untuk bergabung sebagai **Administrator** di sistem internal **LicenseTrack - {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}**.
                 Silakan terima undangan ini dan selesaikan registrasi akun Anda dengan mengeklik tombol di bawah ini.
             </p>
             
@@ -46,7 +46,7 @@
             <p class="note">Undangan ini rahasia, berlaku selama <strong>48 jam</strong> (hingga {{ $invitation->expires_at->translatedFormat('d F Y H:i') }} WIB), dan hanya dapat digunakan sekali. Setelah itu, Anda perlu meminta administrator pengundang untuk mengirim ulang undangan.</p>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} LicenseTrack &middot; PT Hariff Daya Tunggal Engineering
+            &copy; {{ date('Y') }} LicenseTrack &middot; {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}
         </div>
     </div>
 </body>

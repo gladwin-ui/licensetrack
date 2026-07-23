@@ -78,6 +78,14 @@ class SettingController extends Controller
                 ['value' => $value]
             );
             Cache::forget('setting_' . $key);
+
+            if ($key === 'reminder_company_name') {
+                Setting::updateOrCreate(
+                    ['key' => 'company_name'],
+                    ['value' => $value]
+                );
+                Cache::forget('setting_company_name');
+            }
         }
 
         // Check if send time changed, regenerate schedules
@@ -110,7 +118,7 @@ class SettingController extends Controller
         $templateType = $validated['template'];
 
         if ($gateway instanceof FonnteGateway) {
-            $companyName = setting('reminder_company_name', 'PT Hariff');
+            $companyName = setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada'));
             $nowStr = now()->translatedFormat('d F Y H:i');
 
             if ($templateType === 'expired') {
@@ -155,14 +163,14 @@ class SettingController extends Controller
             if ($templateType === 'expired') {
                 $params = [
                     "Budi Santoso", 
-                    setting('reminder_company_name', 'PT Hariff'), 
+                    setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')), 
                     "Dummy License Expired", 
                     now()->translatedFormat('d F Y')
                 ];
             } else {
                 $params = [
                     "Budi Santoso", 
-                    setting('reminder_company_name', 'PT Hariff'), 
+                    setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')), 
                     "Dummy License Reminder", 
                     now()->addDays(30)->translatedFormat('d F Y'),
                     "30"

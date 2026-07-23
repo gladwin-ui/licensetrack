@@ -37,6 +37,11 @@
                 $checkedAtFormatted = \Carbon\Carbon::parse($checkedAt)->diffForHumans();
             } catch (\Exception $e) {}
         }
+
+        // Count messages sent today
+        $sentToday = \App\Models\WhatsappMessage::where('status', 'sent')
+            ->whereDate('created_at', \Carbon\Carbon::today('Asia/Jakarta'))
+            ->count();
     @endphp
 
     <div class="px-4 sm:px-6 lg:px-8 py-6">
@@ -72,7 +77,7 @@
                                 <p class="text-xs text-gray-400 mt-1">Dipakai sebagai nama pengirim di isi pesan.</p>
                             </div>
                             <div class="md:col-span-2">
-                                <x-text-input id="reminder_company_name" name="reminder_company_name" type="text" class="block w-full max-w-md focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition" :value="old('reminder_company_name', setting('reminder_company_name', config('reminder.company_name', 'PT Hariff')))" required />
+                                <x-text-input id="reminder_company_name" name="reminder_company_name" type="text" class="block w-full max-w-md focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition" :value="old('reminder_company_name', setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')))" required />
                                 <x-input-error class="mt-2" :messages="$errors->get('reminder_company_name')" />
                             </div>
                         </div>
@@ -231,6 +236,12 @@
                                             </span>
                                         @endif
                                     </dd>
+                                </div>
+
+                                {{-- Messages Sent Today --}}
+                                <div>
+                                    <dt class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pesan Terkirim Hari Ini</dt>
+                                    <dd class="mt-0.5 font-bold font-mono text-emerald-600">{{ $sentToday }}</dd>
                                 </div>
 
                                 {{-- Name --}}

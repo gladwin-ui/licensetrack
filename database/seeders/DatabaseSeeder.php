@@ -11,9 +11,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            AdminSeeder::class,
-            LicenseSeeder::class,
-        ]);
+        // Default seeders are disabled to prevent seeding default admin accounts in production.
+        // Use 'php artisan db:seed --class=LicenseSeeder' for demo data.
     }
 }
