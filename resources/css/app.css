@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none !important;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Toast notification progress bar ── */
+@keyframes toast-shrink {
+    from { width: 100%; }
+    to   { width: 0%; }
+}
+
+.toast-bar {
+    animation: toast-shrink var(--toast-duration, 5s) linear forwards;
+}
+
+.toast-paused .toast-bar {
+    animation-play-state: paused;
+}
