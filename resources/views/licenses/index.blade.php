@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="title">Daftar Lisensi</x-slot>
     <x-slot name="header">
-        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Daftar lisensi</h1>
+        <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight leading-snug">Daftar lisensi</h1>
         <p class="text-sm text-gray-500 mt-1">{{ $licenses->total() }} lisensi terdaftar</p>
     </x-slot>
 

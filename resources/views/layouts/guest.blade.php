@@ -8,7 +8,10 @@
         <title>{{ isset($title) ? $title . ' — ' : '' }}LicenseTrack | {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</title>
         <link rel="icon" type="image/png" href="{{ asset('logo cuma diamond.png') }}">
 
-        <!-- Fonts -->
+        <!-- Fonts (Sora & Figtree) -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=sora:500,600&display=swap" rel="stylesheet">
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -22,19 +25,9 @@
 
                 {{-- Left panel: photo + dark gradient overlay + subtle SVG decoration --}}
                 <div class="hidden md:flex md:w-[45%] p-10 flex-col justify-between relative overflow-hidden bg-cover bg-center" style="background-image: url('{{ asset('buat_bg.jpeg') }}');">
-                    {{-- Dark gradient overlay for readability --}}
-                    <div class="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-950/80 to-black z-0"></div>
-                    {{-- Grid decorative background --}}
-                    <div class="absolute inset-0 opacity-10 z-0">
-                        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-                            <defs>
-                                <pattern id="auth-grid" width="24" height="24" patternUnits="userSpaceOnUse">
-                                    <path d="M 24 0 L 0 0 0 24" fill="none" stroke="white" stroke-width="1" />
-                                </pattern>
-                            </defs>
-                            <rect width="100%" height="100%" fill="url(#auth-grid)" />
-                        </svg>
-                    </div>
+                    {{-- Dark overlay for readability (opacity pas 50%) --}}
+                    <div class="absolute inset-0 bg-slate-950/50 z-0"></div>
+                    {{-- Grid dihapus agar foto lebih jelas --}}
                     {{-- Soft glow accents --}}
                     <div class="absolute -top-40 -left-40 w-96 h-96 bg-red-600/10 rounded-full blur-3xl z-0"></div>
                     <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-slate-500/10 rounded-full blur-3xl z-0"></div>

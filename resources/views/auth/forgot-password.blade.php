@@ -3,7 +3,7 @@
 
     <div x-data="{ loading: false }" class="space-y-6">
         <div>
-            <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">Lupa kata sandi?</h2>
+            <h2 class="font-display text-lg sm:text-xl font-semibold text-slate-900 tracking-tight leading-snug">Lupa kata sandi?</h2>
             <p class="text-sm text-slate-400 mt-1">
                 Masukkan email Anda. Kami akan mengirimkan tautan untuk membuat kata sandi baru (berlaku 60 menit).
             </p>

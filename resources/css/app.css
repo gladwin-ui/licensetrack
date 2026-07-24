@@ -26,3 +26,8 @@
 .toast-paused .toast-bar {
     animation-play-state: paused;
 }
+
+/* ── Display / heading font → always uppercase ── */
+.font-display {
+    text-transform: uppercase;
+}

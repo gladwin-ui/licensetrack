@@ -9,7 +9,7 @@
         </div>
 
         <div>
-            <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">Pendaftaran berhasil</h2>
+            <h2 class="font-display text-lg sm:text-xl font-semibold text-slate-900 tracking-tight leading-snug">Pendaftaran berhasil</h2>
             <p class="text-sm text-slate-500 mt-3 leading-relaxed">
                 Akun Anda <strong class="text-slate-700">{{ $email }}</strong> menunggu persetujuan admin utama.
                 Anda akan dapat masuk setelah disetujui.

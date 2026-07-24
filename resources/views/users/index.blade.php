@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="title">Kelola Admin</x-slot>
     <x-slot name="header">
-        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Kelola Admin</h1>
+        <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight leading-snug">Kelola Admin</h1>
         <p class="text-sm text-gray-500 mt-1">Persetujuan pendaftaran & kontrol akses administrator</p>
     </x-slot>
 
@@ -251,7 +251,7 @@
                     <form method="POST" :action="rejectActionUrl">
                         @csrf
                         <div class="bg-white px-6 pt-6 pb-4">
-                            <h3 class="text-lg font-semibold leading-6 text-gray-900">Tolak Pengajuan</h3>
+                            <h3 class="font-display font-semibold text-gray-900 tracking-tight leading-6">Tolak Pengajuan</h3>
                             <p class="text-sm text-gray-500 mt-3">
                                 Tolak pengajuan pendaftaran dari <strong class="text-red-600" x-text="rejectName"></strong>?
                                 Akun ini tidak akan dapat digunakan untuk masuk, dan pendaftar akan menerima email pemberitahuan.
@@ -275,7 +275,7 @@
                     <form method="POST" :action="promoteActionUrl">
                         @csrf
                         <div class="bg-white px-6 pt-6 pb-4">
-                            <h3 class="text-lg font-semibold leading-6 text-gray-900">Jadikan Admin Utama</h3>
+                            <h3 class="font-display font-semibold text-gray-900 tracking-tight leading-6">Jadikan Admin Utama</h3>
                             <p class="text-sm text-gray-500 mt-3">
                                 Angkat <strong class="text-indigo-600" x-text="promoteName"></strong> menjadi admin utama?
                             </p>

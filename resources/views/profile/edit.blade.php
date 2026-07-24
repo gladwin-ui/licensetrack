@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="title">Profil Saya</x-slot>
     <x-slot name="header">
-        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Profil Saya</h1>
+        <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight leading-snug">Profil Saya</h1>
         <p class="text-sm text-gray-500 mt-1">Ubah informasi akun dan kata sandi Anda</p>
     </x-slot>
 

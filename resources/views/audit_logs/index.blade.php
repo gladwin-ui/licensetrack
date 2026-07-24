@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="title">Audit Log</x-slot>
     <x-slot name="header">
-        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Audit Log</h1>
+        <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight leading-snug">Audit Log</h1>
         <p class="text-sm text-gray-500 mt-1">Catatan aktivitas dan riwayat keamanan sistem</p>
     </x-slot>
 

@@ -11,7 +11,7 @@
             <circle cx="120" cy="36" r="14" class="fill-red-100"/>
             <path d="M114 36h12M120 30v12" class="stroke-red-500" stroke-width="3" stroke-linecap="round"/>
         </svg>
-        <h3 class="text-base font-semibold text-gray-700">{{ $emptyTitle }}</h3>
+        <h3 class="font-display text-[15px] font-semibold text-gray-700 tracking-tight">{{ $emptyTitle }}</h3>
         <p class="text-sm text-gray-400 mt-1">{{ $emptySubtitle }}</p>
         <a href="{{ route('licenses.create') }}" class="mt-5 inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

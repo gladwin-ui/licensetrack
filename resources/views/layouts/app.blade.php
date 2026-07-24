@@ -8,10 +8,13 @@
         <title>{{ isset($title) ? $title . ' — ' : '' }}LicenseTrack | {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</title>
         <link rel="icon" type="image/png" href="{{ asset('logo cuma diamond.png') }}">
 
-        <!-- Fonts (Figtree & Plus Jakarta Sans) -->
+        <!-- Fonts (Sora & Figtree) -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=sora:500,600&display=swap" rel="stylesheet">
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=plus-jakarta-sans:400,500,600,700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

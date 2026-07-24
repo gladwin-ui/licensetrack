@@ -8,7 +8,7 @@
                 </svg>
             </a>
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Edit lisensi</h1>
+                <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight leading-snug">Edit lisensi</h1>
                 <p class="text-xs text-gray-500 mt-0.5">{{ $license->name }}</p>
             </div>
         </div>

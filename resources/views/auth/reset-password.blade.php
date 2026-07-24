@@ -3,7 +3,7 @@
 
     <div x-data="{ loading: false }" class="space-y-6">
         <div>
-            <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">Buat kata sandi baru</h2>
+            <h2 class="font-display text-lg sm:text-xl font-semibold text-slate-900 tracking-tight leading-snug">Buat kata sandi baru</h2>
             <p class="text-sm text-slate-400 mt-1">Tentukan kata sandi baru untuk akun Anda.</p>
         </div>
 

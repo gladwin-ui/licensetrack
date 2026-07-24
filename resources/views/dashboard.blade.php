@@ -8,7 +8,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Dashboard</h1>
+            <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight leading-snug">Dashboard</h1>
             <p class="text-sm text-gray-500 mt-1">
                 {{ $activeLicensesCount }} lisensi aktif · {{ $attentionThisWeekCount }} butuh perhatian minggu ini
             </p>
@@ -75,7 +75,7 @@
             </a>
 
             {{-- Card 3: Kritis (1–30 Hari) --}}
-            <a href="{{ route('dashboard', ['health' => 'kritis']) }}" class="bg-white rounded-xl border {{ $expiringIn30 > 0 ? 'border-red-200 bg-white' : 'border-gray-200/70 bg-white' }} {{ request('health') === 'kritis' ? 'border-red-400 ring-1 ring-red-400/30 shadow-md' : 'shadow-sm' }} p-5 hover:shadow-md hover:scale-[1.01] transition duration-200 group block relative">
+            <a href="{{ route('dashboard', ['health' => 'kritis']) }}" class="bg-white rounded-xl border {{ request('health') === 'kritis' ? 'border-red-400 ring-1 ring-red-400/30 shadow-md' : 'border-gray-200/70 shadow-sm' }} p-5 hover:shadow-md hover:scale-[1.01] transition duration-200 group block relative">
                 @if ($expiringIn30 > 0)
                     <span class="absolute top-4 right-4 flex h-2 w-2">
                         <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -171,7 +171,7 @@
             <div class="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-slate-200/70 flex flex-col">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-100 mb-6 gap-4">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900 tracking-tight">Lisensi mendesak</h3>
+                        <h3 class="font-display text-[15px] font-semibold text-slate-900 tracking-tight">Lisensi mendesak</h3>
                         <p class="text-xs text-slate-400 mt-0.5">Diurutkan berdasarkan tanggal jatuh tempo terdekat</p>
                     </div>
                     @if (request()->hasAny(['search', 'vendor', 'health', 'status']))
@@ -186,7 +186,7 @@
                         <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <h3 class="text-sm font-medium text-slate-900">Belum ada lisensi terdaftar</h3>
+                        <h3 class="font-display text-[15px] font-semibold text-slate-900 tracking-tight">Belum ada lisensi terdaftar</h3>
                         <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">Tambahkan lisensi pertama untuk mulai memantau masa berlakunya.</p>
                         <a href="{{ route('licenses.create') }}" class="mt-4 inline-flex items-center gap-2 bg-red-600 text-white font-semibold px-4 py-2 rounded-xl text-xs hover:bg-red-700 transition active:scale-[0.98]">
                             <span>+ Tambah lisensi</span>
@@ -334,7 +334,7 @@
                 <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-slate-200/70 flex flex-col items-center">
                     <div class="w-full flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-900 tracking-tight">Distribusi Status</h3>
+                            <h3 class="font-display text-[15px] font-semibold text-slate-900 tracking-tight">Distribusi Status</h3>
                         </div>
                         <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">{{ $totalLicenses }} Total</span>
                     </div>
@@ -396,7 +396,7 @@
                             <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/30">Jadwal Reminder</span>
                             <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
-                        <h4 class="font-bold text-lg text-white leading-snug">Pengingat WhatsApp Berikutnya</h4>
+                        <h4 class="font-display text-[15px] font-semibold text-white tracking-tight leading-snug">Pengingat WhatsApp Berikutnya</h4>
                         
                         @if (isset($upcomingReminders) && $upcomingReminders->isNotEmpty())
                             @php
@@ -417,7 +417,7 @@
                             <div class="w-7 h-7 rounded-full bg-red-600 border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-sm" title="WhatsApp Gateway">WA</div>
                             <div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-sm" title="Automated Scheduler">⚡</div>
                         </div>
-                        <a href="{{ route('reminders.index') }}" class="text-xs font-bold text-red-400 hover:text-red-300 transition inline-flex items-center gap-1">Lihat Antrian Reminder →</a>
+                        <a href="{{ route('reminders.index') }}" class="text-xs font-bold text-red-400 hover:text-red-300 transition inline-flex items-center gap-1">Lihat Riwayat Reminder &rarr;</a>
                     </div>
                 </div>
 

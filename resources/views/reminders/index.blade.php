@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="text-2xl font-bold text-gray-800">Riwayat Pengingat WhatsApp</h1>
+        <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-800 tracking-tight leading-snug">Riwayat Pengingat WhatsApp</h1>
     </x-slot>
 
     <div class="py-8">

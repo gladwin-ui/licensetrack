@@ -6,7 +6,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </a>
-            <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Detail lisensi</h1>
+            <h1 class="font-display text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight leading-snug">Detail lisensi</h1>
         </div>
     </x-slot>
 
@@ -62,7 +62,7 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 class="font-semibold text-gray-800">Hapus Lisensi?</h3>
+                                    <h3 class="font-display font-semibold text-gray-800 tracking-tight">Hapus Lisensi?</h3>
                                     <p class="text-sm text-gray-500">Tindakan ini tidak dapat dibatalkan.</p>
                                 </div>
                             </div>
@@ -108,7 +108,7 @@
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-800">{{ $license->name }}</h2>
+                        <h2 class="font-display text-xl font-semibold text-gray-800 tracking-tight">{{ $license->name }}</h2>
                         <p class="text-gray-500 text-sm mt-1">{{ $license->vendor ?? 'Vendor tidak disebutkan' }}</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -163,7 +163,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- PIC Contacts --}}
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                    <h3 class="text-base font-semibold text-gray-700 mb-4">Kontak yang Harus Diingatkan</h3>
+                    <h3 class="font-display text-[15px] font-semibold text-gray-700 tracking-tight mb-4">Kontak yang Harus Diingatkan</h3>
                     <div class="space-y-3">
                         @foreach ($license->contacts as $contact)
                             <div class="flex items-center gap-3 p-3 rounded-lg {{ $contact->is_primary ? 'bg-red-50 border border-red-100' : 'bg-gray-50' }}">
@@ -186,7 +186,7 @@
 
                 {{-- File Attachments --}}
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                    <h3 class="text-base font-semibold text-gray-700 mb-4">Berkas Lampiran Sertifikat / Dokumen Lisensi</h3>
+                    <h3 class="font-display text-[15px] font-semibold text-gray-700 tracking-tight mb-4">Berkas Lampiran Sertifikat / Dokumen Lisensi</h3>
                     @if ($license->files->isEmpty())
                         <p class="text-sm text-gray-400 text-center py-6">Belum ada file lampiran.</p>
                     @else
@@ -218,7 +218,7 @@
 
             {{-- Reminder Timeline --}}
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                <h3 class="text-base font-semibold text-gray-700 mb-6">Jadwal Pengingat</h3>
+                <h3 class="font-display text-[15px] font-semibold text-gray-700 tracking-tight mb-6">Jadwal Pengingat</h3>
                 
                 @if ($license->reminderLogs->isEmpty())
                     <p class="text-sm text-gray-400 text-center py-4">Belum ada jadwal. Edit lisensi untuk membuat jadwal.</p>

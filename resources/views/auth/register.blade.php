@@ -3,7 +3,7 @@
 
     <div x-data="{ loading: false }" class="space-y-6">
         <div>
-            <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">Daftar akun administrator</h2>
+            <h2 class="font-display text-lg sm:text-xl font-semibold text-slate-900 tracking-tight leading-snug">Daftar akun administrator</h2>
             <p class="text-sm text-slate-400 mt-1">Pendaftaran akan ditinjau oleh admin utama sebelum dapat digunakan.</p>
         </div>
 

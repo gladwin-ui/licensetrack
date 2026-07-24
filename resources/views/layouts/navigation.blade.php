@@ -84,7 +84,7 @@
             <a href="{{ route($item['route']) }}" 
                :title="sidebarCollapsed ? '{{ $item['label'] }}' : ''"
                :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
-               class="flex items-center gap-3.5 rounded-2xl font-bold text-sm transition-all duration-300 group {{ $item['active'] ? 'bg-white text-slate-900 shadow-lg shadow-white/10' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+               class="flex items-center gap-3.5 rounded-2xl font-semibold text-sm transition-all duration-300 group {{ $item['active'] ? 'bg-white text-slate-900 shadow-lg shadow-white/10' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition {{ $item['active'] ? 'bg-orange-100 text-orange-600' : 'bg-slate-800/60 group-hover:bg-slate-700/80 text-slate-400 group-hover:text-white' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
@@ -201,7 +201,7 @@
                 @endif
 
                 <a href="{{ route($item['route']) }}" @click="mobileSidebarOpen = false"
-                   class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-bold text-sm transition-all group {{ $item['active'] ? 'bg-white text-slate-900 shadow-lg shadow-white/10' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+                   class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all group {{ $item['active'] ? 'bg-white text-slate-900 shadow-lg shadow-white/10' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition {{ $item['active'] ? 'bg-orange-100 text-orange-600' : 'bg-slate-800/60 group-hover:bg-slate-700/80 text-slate-400 group-hover:text-white' }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
