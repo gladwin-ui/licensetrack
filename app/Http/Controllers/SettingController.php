@@ -58,8 +58,9 @@ class SettingController extends Controller
         }
 
         $checkedAt = \App\Models\Setting::find('fonnte_device_checked_at')?->value;
+        $templates = \App\Models\MessageTemplate::withCount('licenses')->orderBy('name')->get();
 
-        return view('settings.index', compact('fonnteDevice', 'maskedFonnteToken', 'checkedAt'));
+        return view('settings.index', compact('fonnteDevice', 'maskedFonnteToken', 'checkedAt', 'templates'));
     }
 
     public function update(Request $request, ReminderScheduler $scheduler)

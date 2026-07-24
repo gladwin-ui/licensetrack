@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PasswordChangedMail;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -34,12 +37,17 @@ class NewPasswordController extends Controller
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        // Here we will attempt to reset the user's password. If it is successful we
-        // will update the password on an actual user model and persist it to the
-        // database. Otherwise we will parse the error and return the response.
+        // Only active accounts may reset their password. Anything else gets
+        // the generic "invalid token" response.
+        $account = User::where('email', $request->email)->first();
+        if ($account && ! $account->isActive()) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'Tautan reset tidak valid atau sudah kedaluwarsa.']);
+        }
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user) use ($request) {
@@ -48,16 +56,24 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                // Force logout on every device that still holds a session.
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+
                 event(new PasswordReset($user));
+
+                AuditLogger::log('user.password_reset', $user, "Kata sandi di-reset mandiri lewat tautan email oleh {$user->name} ({$user->email}).");
+
+                try {
+                    Mail::to($user->email)->send(new PasswordChangedMail($user));
+                } catch (\Exception $e) {
+                    // Non-blocking: the reset itself already succeeded.
+                }
             }
         );
 
-        // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
-        // redirect them back to where they came from with their error message.
         return $status == Password::PASSWORD_RESET
-                    ? redirect()->route('login')->with('status', __($status))
+                    ? redirect()->route('login')->with('status', 'Kata sandi Anda berhasil diperbarui. Silakan masuk kembali.')
                     : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+                        ->withErrors(['email' => 'Tautan reset tidak valid atau sudah kedaluwarsa.']);
     }
 }

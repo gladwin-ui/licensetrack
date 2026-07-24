@@ -17,6 +17,92 @@
     },
     setPrimary(index) {
         this.contacts.forEach((c, i) => c.is_primary = (i === index));
+    },
+
+    // Message Template state
+    reminderMode: '{{ old('reminder_mode', isset($license) ? ($license->message_intro && $license->message_closing ? 'custom' : ($license->message_template_id ? 'template' : 'standard')) : 'standard') }}',
+    templateId: '{{ old('message_template_id', $license->message_template_id ?? '') }}',
+    introText: `{{ old('message_intro', $license->message_intro ?? '') }}`,
+    closingText: `{{ old('message_closing', $license->message_closing ?? '') }}`,
+
+    templates: @js($templates->mapWithKeys(fn($t) => [$t->id => ['intro' => $t->intro, 'closing' => $t->closing]])),
+    companyName: '{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}',
+
+    get resolvedIntro() {
+        let raw = '';
+        if (this.reminderMode === 'standard') {
+            raw = 'Berikut adalah pengingat dari *{perusahaan}* mengenai lisensi yang berada di bawah tanggung jawab Anda:';
+        } else if (this.reminderMode === 'template') {
+            let t = this.templates[this.templateId];
+            raw = t ? t.intro : '';
+        } else {
+            raw = this.introText;
+        }
+        return this.resolvePlaceholders(raw);
+    },
+
+    get resolvedClosing() {
+        let raw = '';
+        if (this.reminderMode === 'standard') {
+            raw = 'Mohon segera mengkoordinasikan dan menindaklanjuti proses perpanjangan sebelum tanggal kedaluwarsa agar operasional perusahaan tetap berjalan lancar.';
+        } else if (this.reminderMode === 'template') {
+            let t = this.templates[this.templateId];
+            raw = t ? t.closing : '';
+        } else {
+            raw = this.closingText;
+        }
+        return this.resolvePlaceholders(raw);
+    },
+
+    resolvePlaceholders(text) {
+        if (!text) return '';
+        let days = '30';
+        let name = document.getElementById('name')?.value || '[Nama Lisensi]';
+        let vendor = document.getElementById('vendor')?.value || '[Nama Vendor]';
+        let startVal = document.getElementById('start_date')?.value;
+        let endVal = document.getElementById('end_date')?.value;
+
+        let startFormat = startVal ? this.formatDate(startVal) : '[Tanggal Mulai]';
+        let endFormat = endVal ? this.formatDate(endVal) : '[Tanggal Berakhir]';
+
+        let picName = (this.contacts && this.contacts.length > 0 && this.contacts[0].name) ? this.contacts[0].name : '[Nama PIC]';
+
+        return text
+            .replace(/{perusahaan}/g, this.companyName)
+            .replace(/{nama_pic}/g, picName)
+            .replace(/{nama_lisensi}/g, name)
+            .replace(/{vendor}/g, vendor)
+            .replace(/{tanggal_mulai}/g, startFormat)
+            .replace(/{tanggal_berakhir}/g, endFormat)
+            .replace(/{sisa_hari}/g, days);
+    },
+
+    formatDate(dateStr) {
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    },
+
+    insertPlaceholder(targetField, placeholder) {
+        let textarea = document.getElementById(targetField);
+        if (!textarea) return;
+        let startPos = textarea.selectionStart;
+        let endPos = textarea.selectionEnd;
+        let text = targetField === 'message_intro' ? this.introText : this.closingText;
+
+        let newText = text.substring(0, startPos) + placeholder + text.substring(endPos, text.length);
+
+        if (targetField === 'message_intro') {
+            this.introText = newText;
+        } else {
+            this.closingText = newText;
+        }
+
+        textarea.focus();
+        this.$nextTick(() => {
+            textarea.selectionStart = textarea.selectionEnd = startPos + placeholder.length;
+        });
     }
 }">
 
@@ -185,6 +271,147 @@
                 <p class="text-red-500 text-xs">Kontak ke-{{ (int)$idx + 1 }}: {{ $errors->first($key) }}</p>
             @endif
         @endforeach
+    </div>
+
+    {{-- Section: Pesan Pengingat --}}
+    <div class="bg-white rounded-xl border border-gray-200/70 shadow-sm p-6 space-y-4">
+        <div class="border-b border-gray-100 pb-3">
+            <h2 class="text-base font-semibold text-gray-900">Pesan Pengingat WhatsApp</h2>
+            <p class="text-xs text-gray-400 mt-0.5 font-sans">Atur kalimat pembuka dan penutup untuk pesan pengingat WhatsApp sebelum kedaluwarsa.</p>
+        </div>
+
+        <div class="space-y-4">
+            {{-- Mode Radios --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {{-- Mode Standard --}}
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition"
+                       :class="reminderMode === 'standard' ? 'border-red-500 bg-red-55/10' : 'border-gray-200'">
+                    <input type="radio" name="reminder_mode" value="standard" x-model="reminderMode" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <span class="block text-sm font-semibold text-gray-800">Gunakan template standar</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">Memakai teks pengingat bawaan sistem.</span>
+                    </div>
+                </label>
+
+                {{-- Mode Template --}}
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition"
+                       :class="reminderMode === 'template' ? 'border-red-500 bg-red-55/10' : 'border-gray-200'">
+                    <input type="radio" name="reminder_mode" value="template" x-model="reminderMode" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <span class="block text-sm font-semibold text-gray-800">Pilih template tersimpan</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">Gunakan salah satu template yang dikelola di pengaturan.</span>
+                    </div>
+                </label>
+
+                {{-- Mode Custom --}}
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition"
+                       :class="reminderMode === 'custom' ? 'border-red-500 bg-red-55/10' : 'border-gray-200'">
+                    <input type="radio" name="reminder_mode" value="custom" x-model="reminderMode" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <span class="block text-sm font-semibold text-gray-800">Tulis khusus untuk lisensi ini</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">Tulis kalimat pembuka & penutup unik untuk lisensi ini.</span>
+                    </div>
+                </label>
+            </div>
+
+            {{-- Template Dropdown --}}
+            <div x-show="reminderMode === 'template'" class="border border-gray-100 rounded-xl p-4 bg-gray-50/30 space-y-3" x-cloak>
+                <label class="block text-sm font-medium text-gray-700">Pilih Template Pesan <span class="text-red-500">*</span></label>
+                <select name="message_template_id" x-model="templateId"
+                        class="w-full border {{ $errors->has('message_template_id') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition">
+                    <option value="">-- Pilih Template --</option>
+                    @foreach ($templates as $tmpl)
+                        <option value="{{ $tmpl->id }}">{{ $tmpl->name }} {{ $tmpl->is_default ? '(Default)' : '' }}</option>
+                    @endforeach
+                </select>
+                @error('message_template_id')
+                    <p class="text-red-500 text-xs">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Custom Textareas --}}
+            <div x-show="reminderMode === 'custom'" class="border border-gray-100 rounded-xl p-4 bg-gray-50/30 space-y-5" x-cloak>
+                <div class="grid grid-cols-1 gap-4">
+                    {{-- Intro --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-sm font-medium text-gray-700">Kalimat Pembuka <span class="text-red-500">*</span></label>
+                            <span class="text-xs text-gray-400 font-mono" x-text="introText.length + '/500'">0/500</span>
+                        </div>
+                        <textarea name="message_intro" id="message_intro" x-model="introText" rows="3" maxlength="500"
+                                  placeholder="Contoh: Berikut adalah pengingat dari {perusahaan} mengenai lisensi..."
+                                  class="w-full border {{ $errors->has('message_intro') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                        @error('message_intro')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span class="text-xs text-gray-500 mr-1.5 font-medium">Sisipkan:</span>
+                            <button type="button" @click="insertPlaceholder('message_intro', '{perusahaan}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                            <button type="button" @click="insertPlaceholder('message_intro', '{nama_pic}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                            <button type="button" @click="insertPlaceholder('message_intro', '{nama_lisensi}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                            <button type="button" @click="insertPlaceholder('message_intro', '{vendor}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                            <button type="button" @click="insertPlaceholder('message_intro', '{tanggal_mulai}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                            <button type="button" @click="insertPlaceholder('message_intro', '{tanggal_berakhir}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                            <button type="button" @click="insertPlaceholder('message_intro', '{sisa_hari}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                        </div>
+                    </div>
+
+                    {{-- Closing --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-sm font-medium text-gray-700">Kalimat Penutup <span class="text-red-500">*</span></label>
+                            <span class="text-xs text-gray-400 font-mono" x-text="closingText.length + '/500'">0/500</span>
+                        </div>
+                        <textarea name="message_closing" id="message_closing" x-model="closingText" rows="3" maxlength="500"
+                                  placeholder="Contoh: Mohon segera mengkoordinasikan proses perpanjangan..."
+                                  class="w-full border {{ $errors->has('message_closing') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                        @error('message_closing')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span class="text-xs text-gray-500 mr-1.5 font-medium">Sisipkan:</span>
+                            <button type="button" @click="insertPlaceholder('message_closing', '{perusahaan}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                            <button type="button" @click="insertPlaceholder('message_closing', '{nama_pic}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                            <button type="button" @click="insertPlaceholder('message_closing', '{nama_lisensi}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                            <button type="button" @click="insertPlaceholder('message_closing', '{vendor}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                            <button type="button" @click="insertPlaceholder('message_closing', '{tanggal_mulai}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                            <button type="button" @click="insertPlaceholder('message_closing', '{tanggal_berakhir}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                            <button type="button" @click="insertPlaceholder('message_closing', '{sisa_hari}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Live Preview --}}
+            <div class="border border-gray-150 rounded-xl p-5 bg-slate-50 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider font-sans">Pratinjau Pesan Terkirim (Sebelum Kadaluarsa)</span>
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 font-sans">Live Preview</span>
+                </div>
+
+                {{-- WhatsApp Chat Bubble Layout --}}
+                <div class="w-full bg-[#E5DDD5] rounded-xl p-4 shadow-inner max-w-lg overflow-hidden border border-slate-300/40 relative">
+                    <div class="bg-white rounded-lg p-3 text-sm text-gray-800 shadow-sm relative max-w-[92%] leading-relaxed">
+                        <div class="whitespace-pre-wrap font-sans text-xs select-text">Halo *<span x-text="(contacts && contacts.length > 0 && contacts[0].name) ? contacts[0].name : '[Nama PIC]'"></span>*,\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedIntro"></span>\n
+📋 *INFORMASI LISENSI*
+• *Judul:* <span x-text="document.getElementById('name')?.value || '[Nama Lisensi]'"></span>
+• *Vendor / Penyedia:* <span x-text="document.getElementById('vendor')?.value || '[Nama Vendor]'"></span>
+• *License Key:* <span x-text="document.getElementById('license_key')?.value || '—'"></span>
+• *Masa Berlaku:* <span x-text="document.getElementById('start_date')?.value ? formatDate(document.getElementById('start_date').value) : '[Tanggal Mulai]'"></span> s/d <span x-text="document.getElementById('end_date')?.value ? formatDate(document.getElementById('end_date').value) : '[Tanggal Berakhir]'"></span>
+• *Sisa Waktu:* 30 hari lagi
+• *Status:* Aktif
+• *Deskripsi:* <span x-text="document.getElementById('description')?.value || '—'"></span>\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedClosing"></span>\n
+Terima kasih.</div>
+                        <div class="text-[10px] text-gray-400 text-right mt-1.5 select-none font-mono">09:00 ✓✓</div>
+                    </div>
+                </div>
+                <p class="text-[11px] text-gray-500 italic mt-1.5 font-sans">
+                    * Teks kustom digunakan untuk pengingat sebelum tanggal berakhir. Pesan untuk lisensi yang sudah lewat masa berlaku memakai teks bawaan sistem.
+                </p>
+            </div>
+        </div>
     </div>
 
     {{-- Section: File Lampiran --}}

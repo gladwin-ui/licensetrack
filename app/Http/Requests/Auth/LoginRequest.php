@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,24 +43,29 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // Validate credentials without creating a session, so the status
+        // check below runs before any Login event (audit + last_login_at).
+        if (! Auth::validate($this->only('email', 'password'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Email atau kata sandi salah.',
             ]);
         }
 
-        $user = Auth::user();
-        if (!$user->is_active) {
-            Auth::logout();
-            $this->session()->invalidate();
-            $this->session()->regenerateToken();
+        $user = Auth::getProvider()->retrieveByCredentials($this->only('email'));
 
+        if (! $user->isActive()) {
             throw ValidationException::withMessages([
-                'email' => 'Akun dinonaktifkan, hubungi administrator.',
+                'email' => match ($user->status) {
+                    User::STATUS_PENDING => 'Akun Anda masih menunggu persetujuan admin utama.',
+                    User::STATUS_REJECTED => 'Pengajuan akun Anda ditolak. Hubungi administrator.',
+                    default => 'Akun Anda dinonaktifkan. Hubungi administrator.',
+                },
             ]);
         }
+
+        Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -80,10 +86,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
         ]);
     }
 

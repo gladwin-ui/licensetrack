@@ -329,12 +329,342 @@
                 </div>
 
                 {{-- ========================================================== --}}
+                {{-- PANEL: Template Pesan                                        --}}
+                {{-- ========================================================== --}}
+                <div class="bg-white border border-gray-200/70 rounded-xl shadow-sm overflow-hidden"
+                     x-data="{
+                         openAddModal: false,
+                         openEditModal: false,
+                         editId: null,
+                         templateName: '',
+                         introText: '',
+                         closingText: '',
+                         templatesList: @js($templates->mapWithKeys(fn($t) => [$t->id => ['name' => $t->name, 'licenses_count' => $t->licenses_count]])),
+                         companyName: '{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}',
+                         
+                         get resolvedIntro() { return this.resolvePlaceholders(this.introText); },
+                         get resolvedClosing() { return this.resolvePlaceholders(this.closingText); },
+                         
+                         resolvePlaceholders(text) {
+                             if (!text) return '';
+                             return text
+                                 .replace(/{perusahaan}/g, this.companyName)
+                                 .replace(/{nama_pic}/g, 'Budi Santoso')
+                                 .replace(/{nama_lisensi}/g, 'Antivirus Kaspersky Endpoint')
+                                 .replace(/{vendor}/g, 'Kaspersky')
+                                 .replace(/{tanggal_mulai}/g, '20 Oktober 2025')
+                                 .replace(/{tanggal_berakhir}/g, '20 Oktober 2026')
+                                 .replace(/{sisa_hari}/g, '30');
+                         },
+                         
+                         insertPlaceholder(targetField, placeholder) {
+                             let text = targetField === 'intro' ? this.introText : this.closingText;
+                             let textarea = document.getElementById('modal_' + targetField + (this.editId ? '_edit' : '_add'));
+                             if (!textarea) {
+                                 if (targetField === 'intro') this.introText += placeholder;
+                                 else this.closingText += placeholder;
+                                 return;
+                             }
+                             let startPos = textarea.selectionStart;
+                             let endPos = textarea.selectionEnd;
+                             let newText = text.substring(0, startPos) + placeholder + text.substring(endPos, text.length);
+                             if (targetField === 'intro') {
+                                 this.introText = newText;
+                             } else {
+                                 this.closingText = newText;
+                             }
+                             textarea.focus();
+                             this.$nextTick(() => {
+                                 textarea.selectionStart = textarea.selectionEnd = startPos + placeholder.length;
+                             });
+                         },
+                         
+                         openEdit(tmpl) {
+                             this.editId = tmpl.id;
+                             this.templateName = tmpl.name;
+                             this.introText = tmpl.intro;
+                             this.closingText = tmpl.closing;
+                             this.openEditModal = true;
+                         },
+                         
+                         openAdd() {
+                             this.editId = null;
+                             this.templateName = '';
+                             this.introText = '';
+                             this.closingText = '';
+                             this.openAddModal = true;
+                         }
+                     }">
+                    
+                    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-gray-900">Template Pesan</h2>
+                            <p class="text-xs text-gray-400 mt-1 font-sans">Daftar template pesan pengingat WhatsApp kustom.</p>
+                        </div>
+                        <button type="button" @click="openAdd()"
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg shadow-sm hover:brightness-110 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Tambah Template
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="bg-gray-50 text-xs text-gray-700 uppercase border-b border-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3 font-semibold">Nama Template</th>
+                                    <th class="px-6 py-3 font-semibold">Kalimat Pembuka</th>
+                                    <th class="px-6 py-3 font-semibold">Kalimat Penutup</th>
+                                    <th class="px-6 py-3 font-semibold text-center">Penggunaan</th>
+                                    <th class="px-6 py-3 font-semibold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-gray-700">
+                                @forelse ($templates as $tmpl)
+                                    <tr class="hover:bg-gray-50/50 transition">
+                                        <td class="px-6 py-4 font-medium text-gray-900">
+                                            <div class="flex items-center gap-2">
+                                                <span>{{ $tmpl->name }}</span>
+                                                @if ($tmpl->is_default)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-100">Default</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs font-sans max-w-xs truncate" title="{{ $tmpl->intro }}">{{ $tmpl->intro }}</td>
+                                        <td class="px-6 py-4 text-xs font-sans max-w-xs truncate" title="{{ $tmpl->closing }}">{{ $tmpl->closing }}</td>
+                                        <td class="px-6 py-4 text-center text-xs font-medium">{{ $tmpl->licenses_count }} Lisensi</td>
+                                        <td class="px-6 py-4 text-center">
+                                            <div class="inline-flex items-center justify-center gap-2">
+                                                @if (!$tmpl->is_default)
+                                                    <form method="POST" action="{{ route('settings.templates.default', $tmpl) }}">
+                                                        @csrf
+                                                        <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium transition">Jadikan Default</button>
+                                                    </form>
+                                                @endif
+                                                <button type="button" @click="openEdit({{ $tmpl->toJson() }})"
+                                                        class="text-xs text-gray-600 hover:text-gray-950 font-medium transition">Ubah</button>
+                                                
+                                                @if (!$tmpl->is_default && $tmpl->licenses_count === 0)
+                                                    <form method="POST" action="{{ route('settings.templates.destroy', $tmpl) }}"
+                                                          onsubmit="return confirm('Hapus template {{ $tmpl->name }}?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium transition">Hapus</button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-8 text-center text-gray-400 font-sans">Belum ada template terdaftar.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Modal: Tambah Template --}}
+                    <div x-show="openAddModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto" x-cloak>
+                        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="openAddModal = false"></div>
+                        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-2xl mx-4 overflow-hidden relative z-10 my-8 flex flex-col max-h-[85vh]">
+                            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                                <h3 class="text-base font-semibold text-gray-900">Tambah Template Pesan</h3>
+                                <button type="button" @click="openAddModal = false" class="text-gray-400 hover:text-gray-500 rounded p-1 hover:bg-slate-50 transition">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            
+                            <form method="POST" action="{{ route('settings.templates.store') }}" class="flex flex-col overflow-hidden">
+                                @csrf
+                                <div class="p-6 space-y-4 overflow-y-auto text-left flex-1">
+                                    {{-- Nama --}}
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Template <span class="text-red-500">*</span></label>
+                                        <input type="text" name="name" x-model="templateName" required placeholder="Contoh: Template Software"
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition">
+                                    </div>
+                                    
+                                    {{-- Intro --}}
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-sm font-medium text-gray-700">Kalimat Pembuka <span class="text-red-500">*</span></label>
+                                            <span class="text-xs text-gray-400 font-mono" x-text="introText.length + '/500'">0/500</span>
+                                        </div>
+                                        <textarea name="intro" id="modal_intro_add" x-model="introText" rows="3" required maxlength="500"
+                                                  placeholder="Contoh: Berikut adalah pengingat dari {perusahaan} mengenai lisensi..."
+                                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                            <button type="button" @click="insertPlaceholder('intro', '{perusahaan}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{nama_pic}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{nama_lisensi}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{vendor}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{tanggal_mulai}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{tanggal_berakhir}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{sisa_hari}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Closing --}}
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-sm font-medium text-gray-700">Kalimat Penutup <span class="text-red-500">*</span></label>
+                                            <span class="text-xs text-gray-400 font-mono" x-text="closingText.length + '/500'">0/500</span>
+                                        </div>
+                                        <textarea name="closing" id="modal_closing_add" x-model="closingText" rows="3" required maxlength="500"
+                                                  placeholder="Contoh: Mohon segera mengkoordinasikan proses perpanjangan..."
+                                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                            <button type="button" @click="insertPlaceholder('closing', '{perusahaan}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{nama_pic}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{nama_lisensi}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{vendor}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{tanggal_mulai}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{tanggal_berakhir}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{sisa_hari}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Preview --}}
+                                    <div class="border border-gray-150 rounded-lg p-4 bg-slate-50 space-y-2">
+                                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider font-sans">Pratinjau Pesan Uji Coba</span>
+                                        <div class="w-full bg-[#E5DDD5] rounded-xl p-4 border border-slate-300/40">
+                                            <div class="bg-white rounded-lg p-3 text-xs text-gray-800 shadow-sm leading-relaxed max-w-[92%]">
+                                                <div class="whitespace-pre-wrap font-sans">Halo *Budi Santoso*,\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedIntro || '(Kalimat pembuka kosong)'"></span>\n
+📋 *INFORMASI LISENSI*
+• *Judul:* Antivirus Kaspersky Endpoint
+• *Vendor / Penyedia:* Kaspersky
+• *License Key:* TEST-KEY-KASPERSKY
+• *Masa Berlaku:* 20 Oktober 2025 s/d 20 Oktober 2026
+• *Sisa Waktu:* 30 hari lagi
+• *Status:* Aktif
+• *Deskripsi:* Deskripsi contoh lisensi.\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedClosing || '(Kalimat penutup kosong)'"></span>\n
+Terima kasih.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
+                                    <button type="button" @click="openAddModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition shadow-sm font-sans">Simpan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Modal: Ubah Template --}}
+                    <div x-show="openEditModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto" x-cloak>
+                        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="openEditModal = false"></div>
+                        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-2xl mx-4 overflow-hidden relative z-10 my-8 flex flex-col max-h-[85vh]">
+                            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                                <h3 class="text-base font-semibold text-gray-900">Ubah Template Pesan</h3>
+                                <button type="button" @click="openEditModal = false" class="text-gray-400 hover:text-gray-500 rounded p-1 hover:bg-slate-50 transition">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            
+                            <form method="POST" :action="'{{ url('settings/templates') }}/' + editId" class="flex flex-col overflow-hidden">
+                                @csrf @method('PUT')
+                                <div class="p-6 space-y-4 overflow-y-auto text-left flex-1">
+                                    
+                                    {{-- Alert Warning if template used by licenses --}}
+                                    <div x-show="editId && templatesList[editId] && templatesList[editId].licenses_count > 0" 
+                                         class="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg flex items-start gap-2" x-cloak>
+                                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                        </svg>
+                                        <div>
+                                            <strong>Peringatan:</strong> Template ini digunakan oleh <span class="font-bold font-mono" x-text="templatesList[editId].licenses_count"></span> lisensi. Perubahan akan berlaku untuk semua lisensi tersebut.
+                                        </div>
+                                    </div>
+
+                                    {{-- Nama --}}
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Template <span class="text-red-500">*</span></label>
+                                        <input type="text" name="name" x-model="templateName" required placeholder="Contoh: Template Software"
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition">
+                                    </div>
+                                    
+                                    {{-- Intro --}}
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-sm font-medium text-gray-700">Kalimat Pembuka <span class="text-red-500">*</span></label>
+                                            <span class="text-xs text-gray-400 font-mono" x-text="introText.length + '/500'">0/500</span>
+                                        </div>
+                                        <textarea name="intro" id="modal_intro_edit" x-model="introText" rows="3" required maxlength="500"
+                                                  placeholder="Contoh: Berikut adalah pengingat dari {perusahaan} mengenai lisensi..."
+                                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                            <button type="button" @click="insertPlaceholder('intro', '{perusahaan}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{nama_pic}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{nama_lisensi}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{vendor}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{tanggal_mulai}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{tanggal_berakhir}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                                            <button type="button" @click="insertPlaceholder('intro', '{sisa_hari}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Closing --}}
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-sm font-medium text-gray-700">Kalimat Penutup <span class="text-red-500">*</span></label>
+                                            <span class="text-xs text-gray-400 font-mono" x-text="closingText.length + '/500'">0/500</span>
+                                        </div>
+                                        <textarea name="closing" id="modal_closing_edit" x-model="closingText" rows="3" required maxlength="500"
+                                                  placeholder="Contoh: Mohon segera mengkoordinasikan proses perpanjangan..."
+                                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                            <button type="button" @click="insertPlaceholder('closing', '{perusahaan}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{nama_pic}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{nama_lisensi}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{vendor}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{tanggal_mulai}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{tanggal_berakhir}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                                            <button type="button" @click="insertPlaceholder('closing', '{sisa_hari}')" class="px-2 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Preview --}}
+                                    <div class="border border-gray-150 rounded-lg p-4 bg-slate-50 space-y-2">
+                                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider font-sans">Pratinjau Pesan Uji Coba</span>
+                                        <div class="w-full bg-[#E5DDD5] rounded-xl p-4 border border-slate-300/40">
+                                            <div class="bg-white rounded-lg p-3 text-xs text-gray-800 shadow-sm leading-relaxed max-w-[92%]">
+                                                <div class="whitespace-pre-wrap font-sans">Halo *Budi Santoso*,\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedIntro || '(Kalimat pembuka kosong)'"></span>\n
+📋 *INFORMASI LISENSI*
+• *Judul:* Antivirus Kaspersky Endpoint
+• *Vendor / Penyedia:* Kaspersky
+• *License Key:* TEST-KEY-KASPERSKY
+• *Masa Berlaku:* 20 Oktober 2025 s/d 20 Oktober 2026
+• *Sisa Waktu:* 30 hari lagi
+• *Status:* Aktif
+• *Deskripsi:* Deskripsi contoh lisensi.\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedClosing || '(Kalimat penutup kosong)'"></span>\n
+Terima kasih.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
+                                    <button type="button" @click="openEditModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition shadow-sm font-sans font-semibold">Simpan Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ========================================================== --}}
                 {{-- FORM: Kirim Test                                             --}}
                 {{-- ========================================================== --}}
                 <div class="bg-white border border-gray-200/70 rounded-xl shadow-sm">
                     <div class="p-6 border-b border-gray-100">
                         <h2 class="text-base font-semibold text-gray-900">Kirim Test</h2>
-                        <p class="text-xs text-gray-400 mt-1">Uji gateway aktif dengan nomor WhatsApp tujuan.</p>
+                        <p class="text-xs text-gray-400 mt-1 font-sans">Uji gateway aktif dengan nomor WhatsApp tujuan.</p>
                     </div>
                     <form method="post" action="{{ route('settings.test') }}" class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         @csrf
@@ -352,7 +682,7 @@
                             <x-input-error class="mt-2" :messages="$errors->get('template')" />
                         </div>
                         <div>
-                            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-red-700 hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-sm">
+                            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-red-700 hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-sm font-semibold">
                                 Kirim Test
                             </button>
                         </div>

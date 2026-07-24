@@ -64,7 +64,8 @@ class LicenseController extends Controller
      */
     public function create(): View
     {
-        return view('licenses.create');
+        $templates = \App\Models\MessageTemplate::orderBy('name')->get();
+        return view('licenses.create', compact('templates'));
     }
 
     /**
@@ -75,14 +76,17 @@ class LicenseController extends Controller
         $license = DB::transaction(function () use ($request) {
             // Create the license record
             $license = License::create([
-                'name'        => $request->name,
-                'vendor'      => $request->vendor,
-                'description' => $request->description,
-                'license_key' => $request->license_key,
-                'start_date'  => $request->start_date,
-                'end_date'    => $request->end_date,
-                'status'      => $request->status,
-                'created_by'  => auth()->id(),
+                'name'                => $request->name,
+                'vendor'              => $request->vendor,
+                'description'         => $request->description,
+                'license_key'         => $request->license_key,
+                'start_date'          => $request->start_date,
+                'end_date'            => $request->end_date,
+                'status'              => $request->status,
+                'created_by'          => auth()->id(),
+                'message_template_id' => $request->message_template_id,
+                'message_intro'       => $request->message_intro,
+                'message_closing'     => $request->message_closing,
             ]);
 
             // Save contacts
@@ -120,7 +124,8 @@ class LicenseController extends Controller
     public function edit(License $license): View
     {
         $license->load(['files', 'contacts']);
-        return view('licenses.edit', compact('license'));
+        $templates = \App\Models\MessageTemplate::orderBy('name')->get();
+        return view('licenses.edit', compact('license', 'templates'));
     }
 
     /**
@@ -132,13 +137,16 @@ class LicenseController extends Controller
 
         DB::transaction(function () use ($request, $license) {
             $license->update([
-                'name'        => $request->name,
-                'vendor'      => $request->vendor,
-                'description' => $request->description,
-                'license_key' => $request->license_key,
-                'start_date'  => $request->start_date,
-                'end_date'    => $request->end_date,
-                'status'      => $request->status,
+                'name'                => $request->name,
+                'vendor'              => $request->vendor,
+                'description'         => $request->description,
+                'license_key'         => $request->license_key,
+                'start_date'          => $request->start_date,
+                'end_date'            => $request->end_date,
+                'status'              => $request->status,
+                'message_template_id' => $request->message_template_id,
+                'message_intro'       => $request->message_intro,
+                'message_closing'     => $request->message_closing,
             ]);
 
             // Replace all contacts

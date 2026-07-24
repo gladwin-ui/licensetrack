@@ -76,8 +76,24 @@ class ReminderMessageBuilder
         $daysRemainingAbs = abs($license->daysRemaining);
 
         if ($milestone >= 0) {
+            // Resolve custom or template intro/closing
+            if (filled($license->message_intro) && filled($license->message_closing)) {
+                $introRaw = $license->message_intro;
+                $closingRaw = $license->message_closing;
+            } elseif ($license->message_template_id && $license->messageTemplate) {
+                $introRaw = $license->messageTemplate->intro;
+                $closingRaw = $license->messageTemplate->closing;
+            } else {
+                $defaultTemplate = \App\Models\MessageTemplate::where('is_default', true)->first();
+                $introRaw = $defaultTemplate ? $defaultTemplate->intro : 'Berikut adalah pengingat dari *{perusahaan}* mengenai lisensi yang berada di bawah tanggung jawab Anda:';
+                $closingRaw = $defaultTemplate ? $defaultTemplate->closing : 'Mohon segera mengkoordinasikan dan menindaklanjuti proses perpanjangan sebelum tanggal kedaluwarsa agar operasional perusahaan tetap berjalan lancar.';
+            }
+
+            $introResolved = \App\Services\MessagePlaceholderResolver::resolve($introRaw, $license, $contact);
+            $closingResolved = \App\Services\MessagePlaceholderResolver::resolve($closingRaw, $license, $contact);
+
             return "Halo *{$picName}*,\n\n"
-                 . "Berikut adalah pengingat dari *{$companyName}* mengenai lisensi yang berada di bawah tanggung jawab Anda:\n\n"
+                 . "{$introResolved}\n\n"
                  . "📋 *INFORMASI LISENSI*\n"
                  . "• *Judul:* {$licenseName}\n"
                  . "• *Vendor / Penyedia:* {$vendorName}\n"
@@ -86,7 +102,7 @@ class ReminderMessageBuilder
                  . "• *Sisa Waktu:* {$daysRemainingAbs} hari lagi\n"
                  . "• *Status:* {$statusIndo}\n"
                  . "• *Deskripsi:* {$description}\n\n"
-                 . "Mohon segera mengkoordinasikan dan menindaklanjuti proses perpanjangan sebelum tanggal kedaluwarsa agar operasional perusahaan tetap berjalan lancar.\n\n"
+                 . "{$closingResolved}\n\n"
                  . "Terima kasih.";
         } else {
             return "⚠️ *PERINGATAN KEDALUWARSA LISENSI* ⚠️\n\n"

@@ -22,14 +22,14 @@ class CreateAdmin extends Command
      *
      * @var string
      */
-    protected $description = 'Create a new administrator user';
+    protected $description = 'Create an active super administrator user';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('=== Create New Administrator User ===');
+        $this->info('=== Create New Super Administrator User ===');
 
         $name = $this->ask('Enter administrator name');
         if (empty($name)) {
@@ -73,17 +73,19 @@ class CreateAdmin extends Command
             return 1;
         }
 
-        $user = User::create([
+        $user = new User([
             'name'              => $name,
             'email'             => $email,
             'phone'             => $normalizedPhone,
             'password'          => Hash::make($password),
-            'is_active'         => true,
             'email_verified_at' => now(),
-            'phone_verified_at' => now(),
         ]);
+        $user->status = User::STATUS_ACTIVE;
+        $user->is_super_admin = true;
+        $user->approved_at = now();
+        $user->save();
 
-        $this->info("Administrator [{$user->name}] successfully created with email [{$user->email}] and phone [{$user->phone}].");
+        $this->info("Super administrator [{$user->name}] successfully created with email [{$user->email}] and phone [{$user->phone}].");
         return 0;
     }
 }

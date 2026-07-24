@@ -1,34 +1,50 @@
 <x-guest-layout>
-    <x-slot name="title">Reset Kata Sandi</x-slot>
+    <x-slot name="title">Daftar</x-slot>
 
     <div x-data="{ loading: false }" class="space-y-6">
         <div>
-            <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">Buat kata sandi baru</h2>
-            <p class="text-sm text-slate-400 mt-1">Tentukan kata sandi baru untuk akun Anda.</p>
+            <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">Daftar akun administrator</h2>
+            <p class="text-sm text-slate-400 mt-1">Pendaftaran akan ditinjau oleh admin utama sebelum dapat digunakan.</p>
         </div>
 
-        @include('auth.partials.error-banner', ['title' => 'Reset gagal'])
+        @include('auth.partials.error-banner', ['title' => 'Pendaftaran gagal'])
 
-        <form method="POST" action="{{ route('password.store') }}" @submit="loading = true" class="space-y-4">
+        <form method="POST" action="{{ route('register') }}" @submit="loading = true" class="space-y-4">
             @csrf
 
-            <!-- Password Reset Token -->
-            <input type="hidden" name="token" value="{{ $request->route('token') }}">
+            <!-- Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-slate-700 mb-1.5">Nama Lengkap</label>
+                <input id="name" name="name" type="text" autocomplete="name" required
+                       value="{{ old('name') }}" autofocus maxlength="255"
+                       placeholder="Contoh: Budi Santoso"
+                       class="block w-full px-4 py-2.5 border border-gray-200 rounded-lg text-slate-900 placeholder-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition">
+            </div>
 
             <!-- Email -->
             <div>
                 <label for="email" class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
                 <input id="email" name="email" type="email" autocomplete="email" required
-                       value="{{ old('email', $request->email) }}"
-                       class="block w-full px-4 py-2.5 border border-gray-200 rounded-lg text-slate-900 placeholder-slate-300 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition">
+                       value="{{ old('email') }}"
+                       placeholder="nama@hariff.co.id"
+                       class="block w-full px-4 py-2.5 border border-gray-200 rounded-lg text-slate-900 placeholder-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition">
+            </div>
+
+            <!-- WhatsApp Phone -->
+            <div>
+                <label for="phone" class="block text-sm font-medium text-slate-700 mb-1.5">Nomor WhatsApp</label>
+                <input id="phone" name="phone" type="text" autocomplete="tel" required
+                       value="{{ old('phone') }}"
+                       placeholder="08xxxxxxxxxx atau 628xxxxxxxxxx"
+                       class="block w-full px-4 py-2.5 border border-gray-200 rounded-lg text-slate-900 placeholder-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition">
             </div>
 
             <!-- Password -->
             <div x-data="{ show: false }">
-                <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">Kata Sandi Baru</label>
+                <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">Kata Sandi</label>
                 <div class="relative">
                     <input id="password" name="password" :type="show ? 'text' : 'password'"
-                           type="password" autocomplete="new-password" required autofocus
+                           type="password" autocomplete="new-password" required
                            placeholder="Minimal 8 karakter"
                            class="block w-full px-4 py-2.5 pr-11 border border-gray-200 rounded-lg text-slate-900 placeholder-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition">
                     <button type="button" @click="show = !show" tabindex="-1"
@@ -47,9 +63,9 @@
 
             <!-- Confirm Password -->
             <div>
-                <label for="password_confirmation" class="block text-sm font-medium text-slate-700 mb-1.5">Konfirmasi Kata Sandi Baru</label>
+                <label for="password_confirmation" class="block text-sm font-medium text-slate-700 mb-1.5">Konfirmasi Kata Sandi</label>
                 <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required
-                       placeholder="Ulangi kata sandi baru"
+                       placeholder="Ulangi kata sandi"
                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-lg text-slate-900 placeholder-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition">
             </div>
 
@@ -60,8 +76,13 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span x-text="loading ? 'Menyimpan...' : 'Simpan Kata Sandi Baru'">Simpan Kata Sandi Baru</span>
+                <span x-text="loading ? 'Memproses...' : 'Daftar'">Daftar</span>
             </button>
         </form>
+
+        <p class="text-center text-sm text-slate-500">
+            Sudah punya akun?
+            <a href="{{ route('login') }}" class="font-semibold text-slate-800 hover:underline">Masuk</a>
+        </p>
     </div>
 </x-guest-layout>

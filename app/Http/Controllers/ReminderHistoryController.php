@@ -126,7 +126,7 @@ class ReminderHistoryController extends Controller
 
         $today = Carbon::today('Asia/Jakarta');
 
-        $licenses = License::with('contacts')
+        $licenses = License::with(['contacts', 'messageTemplate'])
             ->whereIn('status', ['active', 'renewed'])
             ->whereDate('end_date', '>=', $today)
             ->whereDate('end_date', '<=', $today->copy()->addDays(7))
@@ -198,7 +198,7 @@ class ReminderHistoryController extends Controller
      */
     public function sendNow(License $license, WhatsAppGateway $gateway, ReminderMessageBuilder $builder): RedirectResponse
     {
-        $license->load('contacts');
+        $license->load(['contacts', 'messageTemplate']);
         
         if ($license->contacts->isEmpty()) {
             return back()->with('error', 'Lisensi tidak memiliki kontak PIC.');

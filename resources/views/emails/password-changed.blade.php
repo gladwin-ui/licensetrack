@@ -25,7 +25,7 @@
             <h1 class="title">Keamanan Akun Anda</h1>
             <p class="body-text">Halo, {{ $user->name }}</p>
             <p class="body-text">
-                Kata sandi untuk akun administrator Anda di **LicenseTrack** baru saja berhasil diperbarui secara mandiri menggunakan verifikasi OTP.
+                Kata sandi untuk akun administrator Anda di <strong>LicenseTrack</strong> baru saja berhasil diperbarui melalui tautan reset password.
             </p>
             
             <div class="alert-box">

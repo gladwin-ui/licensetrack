@@ -61,7 +61,7 @@ class DispatchUrgentReminders extends Command
         $this->info("Configured slots reached: " . implode(', ', $passedSlots));
 
         // 4. Ambil lisensi dengan end_date = hari ini, status active/renewed
-        $licenses = License::with('contacts')
+        $licenses = License::with(['contacts', 'messageTemplate'])
             ->whereDate('end_date', $today)
             ->whereIn('status', ['active', 'renewed'])
             ->get();

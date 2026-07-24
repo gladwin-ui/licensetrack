@@ -38,7 +38,7 @@ class SendWhatsAppReminder implements ShouldQueue
      */
     public function handle(WhatsAppGateway $gateway, ReminderMessageBuilder $messageBuilder): void
     {
-        $this->reminderLog->loadMissing(['license', 'license.contacts']);
+        $this->reminderLog->loadMissing(['license', 'license.contacts', 'license.messageTemplate']);
         $license = $this->reminderLog->license;
 
         if (!$license || $license->contacts->isEmpty()) {

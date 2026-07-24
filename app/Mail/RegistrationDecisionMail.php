@@ -2,13 +2,14 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OtpMail extends Mailable
+class RegistrationDecisionMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -16,8 +17,8 @@ class OtpMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public string $otpCode,
-        public string $purposeText
+        public User $user,
+        public bool $approved
     ) {}
 
     /**
@@ -26,7 +27,9 @@ class OtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kode OTP Verifikasi Keamanan - LicenseTrack',
+            subject: $this->approved
+                ? 'Pendaftaran Disetujui - LicenseTrack'
+                : 'Pendaftaran Ditolak - LicenseTrack',
         );
     }
 
@@ -36,7 +39,7 @@ class OtpMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.otp',
+            view: 'emails.registration-decision',
         );
     }
 }

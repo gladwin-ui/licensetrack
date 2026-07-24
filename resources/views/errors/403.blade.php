@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Undangan Tidak Valid — LicenseTrack | {{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</title>
+    <title>Akses Ditolak - LicenseTrack</title>
     <link rel="icon" type="image/png" href="{{ asset('logo cuma diamond.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,19 +27,19 @@
             
             <div class="inline-flex items-center justify-center w-14 h-14 bg-red-50 border border-red-200 rounded-2xl mb-5 text-red-500 shadow-sm">
                 <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.03V3.75M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
                 </svg>
             </div>
 
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Undangan Tidak Valid</h1>
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Akses Ditolak (403)</h1>
             <p class="text-sm text-slate-500 mt-2.5 leading-relaxed">
-                {{ $message }}
+                Maaf, Anda tidak memiliki hak akses untuk membuka halaman ini. Halaman ini hanya didelegasikan untuk akun dengan peran Super Admin.
             </p>
 
             <div class="mt-8 pt-6 border-t border-slate-100">
-                <a href="{{ route('login') }}" 
+                <a href="{{ route('dashboard') }}" 
                    class="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 transition shadow-sm">
-                    Kembali ke Halaman Login
+                    Kembali ke Dashboard
                 </a>
             </div>
         </div>

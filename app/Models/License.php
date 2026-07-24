@@ -22,6 +22,9 @@ class License extends Model
         'end_date',
         'status',
         'created_by',
+        'message_template_id',
+        'message_intro',
+        'message_closing',
     ];
 
     protected $casts = [
@@ -52,6 +55,11 @@ class License extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function messageTemplate(): BelongsTo
+    {
+        return $this->belongsTo(MessageTemplate::class, 'message_template_id');
     }
 
     // -------------------------------------------------------------------------

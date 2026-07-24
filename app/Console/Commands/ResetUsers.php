@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
-use App\Models\UserInvitation;
 use App\Models\AuditLog;
 use App\Models\License;
 use App\Support\PhoneNumber;
@@ -56,10 +55,7 @@ class ResetUsers extends Command
                 // 2. Null-kan user_id pada tabel audit_logs
                 AuditLog::query()->update(['user_id' => null]);
 
-                // 3. Hapus data user_invitations
-                UserInvitation::query()->delete();
-
-                // 4. Hapus data users
+                // 3. Hapus data users
                 DB::statement('SET FOREIGN_KEY_CHECKS=0;');
                 User::query()->delete();
                 DB::statement('SET FOREIGN_KEY_CHECKS=1;');
@@ -116,20 +112,22 @@ class ResetUsers extends Command
             }
 
             // Create user
-            $user = User::create([
+            $user = new User([
                 'name'              => $name,
                 'email'             => $email,
                 'phone'             => $normalizedPhone,
                 'password'          => Hash::make($password),
-                'is_active'         => true,
                 'email_verified_at' => now(),
-                'phone_verified_at' => now(),
             ]);
+            $user->status = User::STATUS_ACTIVE;
+            $user->is_super_admin = true;
+            $user->approved_at = now();
+            $user->save();
 
             // 6. Catat ke audit log
-            AuditLogger::log('system.users_reset', null, "Sistem di-reset. Admin pertama [{$user->name}] ({$user->email}) dibuat.");
+            AuditLogger::log('system.users_reset', null, "Sistem di-reset. Admin utama pertama [{$user->name}] ({$user->email}) dibuat.");
 
-            $this->info("\nAdministrator pertama [{$user->name}] berhasil dibuat.");
+            $this->info("\nAdmin utama pertama [{$user->name}] berhasil dibuat.");
             $this->info("Silakan login menggunakan email [{$user->email}].");
 
         } catch (\Exception $e) {
