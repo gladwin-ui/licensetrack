@@ -88,8 +88,14 @@ DB_PASSWORD=
 QUEUE_CONNECTION=database
 ```
 
-### 4. Migrasi & Seeding
-Jalankan perintah ini untuk membuat struktur tabel di *database* beserta data konfigurasi *default* dan pengguna admin:
+### 4. Setup Database & Migrasi
+Buat *database* MySQL terlebih dahulu (sesuaikan dengan nama yang Anda isi di `DB_DATABASE`):
+
+```sql
+CREATE DATABASE nama_database_anda;
+```
+
+Setelah database berhasil dibuat, jalankan perintah berikut untuk mengeksekusi migrasi tabel beserta data *seeder* default:
 ```bash
 php artisan migrate --seed
 ```
