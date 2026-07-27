@@ -12,22 +12,56 @@ LicenseTrack adalah sebuah sistem manajemen lisensi dan gateway pengingat (remin
 
 ## 🏗 System Architecture
 
-Alur arsitektur sistem LicenseTrack bekerja secara otomatis di belakang layar menggunakan antrean (queue) dan penjadwalan (scheduler) dari Laravel:
+LicenseTrack dibangun menggunakan arsitektur berbasis antrean (queue) dan penjadwalan (scheduler) dari Laravel untuk otomatisasi pesan.
 
-1. **Pencatatan Lisensi:** Pengguna memasukkan data lisensi dan kontak PIC ke dalam sistem. Sistem secara otomatis menghitung dan membuat jadwal pengingat (H-14, H-7, H-3, H-1, dan Hari H) berdasarkan tanggal kedaluwarsa dan pengaturan waktu kirim.
-2. **Scheduler (Cron Job):** Laravel Scheduler (`php artisan schedule:work`) akan berjalan setiap menit untuk memeriksa jadwal di tabel `reminder_logs`.
-3. **Queue System:** Jika ada jadwal pengingat yang sudah waktunya dikirim, sistem akan memasukkannya ke dalam antrean (Queue) agar tidak membebani server saat pengguna sedang mengakses web.
-4. **WhatsApp Gateway (Fonnte):** Queue Worker (`php artisan queue:work`) akan mengeksekusi antrean tersebut dan memanggil layanan `FonnteGateway` untuk mengirimkan pesan via API HTTP ke server Fonnte, yang kemudian meneruskannya ke nomor WhatsApp PIC terkait.
-5. **Pembaruan Status:** Setelah pesan berhasil atau gagal dikirim, sistem akan mencatat hasilnya di menu "Riwayat Reminder" dan meng-update status koneksi *device* Fonnte secara *real-time* di *dashboard*.
+```text
++-------------------------------------------------------------+
+|                        CLIENT LAYER                         |
+|                                                             |
+|   +-----------------------+       +---------------------+   |
+|   | Admin Web Dashboard   |       |  WhatsApp Receiver  |   |
+|   | (Blade + Alpine.js)   |       |  (PIC Contacts)     |   |
+|   +-----------------------+       +---------------------+   |
++-------------------------------------------------------------+
+             |                                 ^
+             | (HTTP/UI)                       | (WA Message)
+             v                                 |
++-------------------------------------------------------------+
+|                   APPLICATION LAYER (Laravel)               |
+|                                                             |
+|      CONTROLLERS                       AUTOMATION           |
+|   +-------------------+           +-------------------+     |
+|   | DashboardCtrl     |           | ScheduleWorker    |     |
+|   | LicenseCtrl       |           | QueueWorker       |     |
+|   | SettingCtrl       |           |                   |     |
+|   +-------------------+           +-------------------+     |
+|                                                             |
+|      SERVICES                                               |
+|   +---------------------------------------------------+     |
+|   | FonnteGateway (Kirim Pesan) & FonnteDeviceChecker |     |
+|   +---------------------------------------------------+     |
++-------------------------------------------------------------+
+             |                                 |
+             v                                 v
++---------------------------+    +----------------------------+
+|         DATA LAYER        |    |       EXTERNAL API         |
+|   +-------------------+   |    |   +--------------------+   |
+|   | MySQL Database    |   |    |   | Fonnte API         |   |
+|   | (Licenses, Logs)  |   |    |   | (WhatsApp Gateway) |   |
+|   +-------------------+   |    |   +--------------------+   |
++---------------------------+    +----------------------------+
+```
 
 ## ✨ Key Features
 
-- **Manajemen Lisensi Terpusat:** Pantau seluruh lisensi dari berbagai vendor dalam satu dasbor informatif (Lisensi Aman, Waspada, Kritis, dan Expired).
-- **Multi-PIC per Lisensi:** Satu lisensi dapat memiliki banyak kontak PIC. Sistem dapat mengirimkan pengingat ke seluruh kontak sekaligus.
-- **Automated WhatsApp Reminders:** Pengiriman pesan otomatis melalui WhatsApp yang terjadwal (H-14, H-7, H-3, H-1, H-0) tanpa perlu campur tangan manual.
-- **Kustomisasi Pesan & Waktu:** Template pesan pengingat dan waktu pengiriman harian (misal: jam 09:00 WIB) dapat diatur secara dinamis melalui menu Pengaturan.
-- **Status Koneksi Real-time:** Memantau status perangkat WhatsApp (terkoneksi atau terputus) secara langsung dari Header halaman dan halaman Pengaturan.
-- **Modern & Responsif UI:** Antarmuka pengguna yang dirancang dengan desain estetis, memanjakan mata, mendukung animasi transisi halus, serta sepenuhnya responsif di berbagai ukuran perangkat.
+| Fitur Utama | Deskripsi |
+| --- | --- |
+| **Manajemen Lisensi Terpusat** | Pantau seluruh lisensi dari berbagai vendor dalam satu dasbor informatif (Lisensi Aman, Waspada, Kritis, dan Expired). |
+| **Multi-PIC per Lisensi** | Satu lisensi dapat memiliki banyak kontak PIC. Sistem dapat mengirimkan pengingat ke seluruh kontak sekaligus. |
+| **Automated WhatsApp Reminders** | Pengiriman pesan otomatis melalui WhatsApp yang terjadwal (H-14, H-7, H-3, H-1, H-0) tanpa perlu campur tangan manual. |
+| **Kustomisasi Pesan & Waktu** | Template pesan pengingat dan waktu pengiriman harian (misal: jam 09:00 WIB) dapat diatur secara dinamis melalui menu Pengaturan. |
+| **Status Koneksi Real-time** | Memantau status perangkat WhatsApp (terkoneksi atau terputus) secara langsung dari Header halaman dan halaman Pengaturan. |
+| **Modern & Responsif UI** | Antarmuka pengguna yang dirancang dengan desain estetis, memanjakan mata, mendukung animasi transisi halus, serta sepenuhnya responsif di berbagai ukuran perangkat. |
 
 ## 📁 Project Structure
 
