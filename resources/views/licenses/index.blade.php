@@ -78,7 +78,7 @@
                         </select>
                     </div>
                     <div class="flex flex-wrap sm:flex-nowrap gap-2 items-end">
-                        <button type="submit" class="flex-1 sm:flex-initial justify-center bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 active:scale-[0.98] transition whitespace-nowrap">Filter</button>
+                        <button type="submit" class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98] whitespace-nowrap">Filter</button>
                         @if (request()->hasAny(['search', 'vendor', 'health']))
                             <a href="{{ route('licenses.index') }}" class="flex-1 sm:flex-initial justify-center text-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 active:scale-[0.98] transition whitespace-nowrap">Reset</a>
                         @endif

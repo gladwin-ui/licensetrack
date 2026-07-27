@@ -13,7 +13,7 @@
         </svg>
         <h3 class="font-display text-[15px] font-semibold text-gray-700 tracking-tight">{{ $emptyTitle }}</h3>
         <p class="text-sm text-gray-400 mt-1">{{ $emptySubtitle }}</p>
-        <a href="{{ route('licenses.create') }}" class="mt-5 inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-sm">
+        <a href="{{ route('licenses.create') }}" class="mt-5 inline-flex justify-center items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>

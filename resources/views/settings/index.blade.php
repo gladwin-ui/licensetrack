@@ -99,7 +99,7 @@
                     </div>
 
                     <div class="p-6 bg-gray-50 rounded-b-xl flex justify-end">
-                        <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-red-700 hover:brightness-110 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-150 shadow-sm">
+                        <button type="submit" class="inline-flex justify-center items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">
                             Simpan Pengaturan
                         </button>
                     </div>
@@ -200,7 +200,7 @@
                         </div>
 
                         <div class="pt-2">
-                            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-red-700 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-150 shadow-sm">
+                            <button type="submit" class="inline-flex justify-center items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                 </svg>
@@ -402,7 +402,7 @@
                             <p class="text-xs text-gray-400 mt-1 font-sans">Daftar template pesan pengingat WhatsApp kustom.</p>
                         </div>
                         <button type="button" @click="openAdd()"
-                                class="inline-flex items-center gap-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg shadow-sm hover:brightness-110 transition">
+                                class="inline-flex justify-center items-center gap-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
@@ -554,7 +554,7 @@ Terima kasih.</div>
                                 </div>
                                 <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
                                     <button type="button" @click="openAddModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">Batal</button>
-                                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition shadow-sm font-sans font-semibold">Simpan</button>
+                                    <button type="submit" class="inline-flex justify-center items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">Simpan</button>
                                 </div>
                             </form>
                         </div>
@@ -661,7 +661,7 @@ Terima kasih.</div>
                                 </div>
                                 <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
                                     <button type="button" @click="openEditModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">Batal</button>
-                                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition shadow-sm font-sans font-semibold">Simpan Perubahan</button>
+                                    <button type="submit" class="inline-flex justify-center items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">Simpan Perubahan</button>
                                 </div>
                             </form>
                         </div>
@@ -692,7 +692,7 @@ Terima kasih.</div>
                             <x-input-error class="mt-2" :messages="$errors->get('template')" />
                         </div>
                         <div>
-                            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-red-700 hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-sm font-semibold">
+                            <button type="submit" class="inline-flex justify-center items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">
                                 Kirim Test
                             </button>
                         </div>
