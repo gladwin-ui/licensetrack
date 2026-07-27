@@ -64,7 +64,7 @@
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
             <img src="{{ asset('logo cuma diamond.png') }}" alt="LicenseTrack Logo" class="w-9 h-9 object-contain flex-shrink-0 rounded-xl shadow-md group-hover:scale-105 transition-transform">
             <div x-show="!sidebarCollapsed" x-transition.opacity class="transition-all duration-300">
-                <h1 class="font-bold text-lg leading-tight tracking-tight text-white group-hover:text-red-400 transition-colors">LicenseTrack</h1>
+                <h1 class="font-bold text-lg leading-tight tracking-tight text-red-500 group-hover:text-white transition-colors">LicenseTrack</h1>
                 <p class="text-[11px] text-slate-400 truncate max-w-[150px]" title="{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}">{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</p>
             </div>
         </a>
@@ -186,7 +186,7 @@
         <div class="flex items-center gap-3 px-6 h-20 border-b border-slate-800/80">
             <img src="{{ asset('logo cuma diamond.png') }}" alt="LicenseTrack Logo" class="w-9 h-9 object-contain flex-shrink-0 rounded-xl shadow-md">
             <div>
-                <h1 class="font-bold text-lg leading-tight tracking-tight text-white">LicenseTrack</h1>
+                <h1 class="font-bold text-lg leading-tight tracking-tight text-red-500">LicenseTrack</h1>
                 <p class="text-[11px] text-slate-400 truncate max-w-[150px]" title="{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}">{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}</p>
             </div>
         </div>

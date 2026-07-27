@@ -54,8 +54,7 @@
 
                             $skipToast = false;
                             if ($toastMessage && (
-                                str_contains($toastMessage, 'berhasil dihapus') || 
-                                str_contains($toastMessage, 'Pengaturan berhasil disimpan')
+                                str_contains($toastMessage, 'berhasil dihapus')
                             )) {
                                 $skipToast = true;
                             }
