@@ -22,7 +22,7 @@
 
             {{-- Action Buttons --}}
             <div class="flex justify-end gap-3">
-                <form method="POST" action="{{ route('licenses.reminders.send-now', $license) }}" onsubmit="return confirm('Kirim reminder manual ke semua PIC sekarang?');" class="flex-1 sm:flex-initial">
+                <form method="POST" action="{{ route('licenses.reminders.send-now', $license) }}" onsubmit="confirmSendReminder(event, this)" class="flex-1 sm:flex-initial">
                     @csrf
                     <button type="submit" class="w-full sm:w-auto justify-center inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-sm active:scale-[0.98]">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,4 +266,37 @@
 
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function confirmSendReminder(event, form) {
+            event.preventDefault();
+            Swal.fire({
+                title: "Kirim Reminder?",
+                text: "Kirim pesan pengingat manual ke kontak lisensi ini sekarang?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#4f46e5",
+                cancelButtonColor: "#6b7280",
+                confirmButtonText: "Ya, Kirim!",
+                cancelButtonText: "Batal",
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: "Memproses...",
+                        text: "Sedang mengirim pesan, mohon tunggu sebentar.",
+                        icon: "info",
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    form.submit();
+                }
+            });
+        }
+    </script>
+    @endpush
 </x-app-layout>

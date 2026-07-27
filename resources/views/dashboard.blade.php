@@ -15,7 +15,7 @@
         </div>
     </x-slot>
 
-    <div class="space-y-8">
+    <div class="space-y-6 -mt-2 sm:-mt-4">
         {{-- Flash Messages --}}
         @if (session('success'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" x-transition.duration.500ms class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-xs">

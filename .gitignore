@@ -28,6 +28,7 @@ Thumbs.db
 
 # Documentation & Prompt files
 README.md
+!README1.md
 *prompt*.md
 *PROMPT*.md
 *Prompt*.md
