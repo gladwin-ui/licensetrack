@@ -27,8 +27,9 @@ Homestead.yaml
 Thumbs.db
 
 # Documentation & Prompt files
-README.md
+READMEyaya.md
 !README1.md
+!README.md
 *prompt*.md
 *PROMPT*.md
 *Prompt*.md
