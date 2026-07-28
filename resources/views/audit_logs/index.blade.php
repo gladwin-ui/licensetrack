@@ -14,22 +14,34 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label for="user_id" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Admin</label>
-                            <select name="user_id" id="user_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-red-500 focus:border-red-500 transition">
-                                <option value="">Semua Admin</option>
-                                @foreach($users as $u)
-                                    <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                                @endforeach
-                            </select>
+                            @php
+                                $userOptions = ['' => 'Semua Admin'];
+                                foreach($users as $u) {
+                                    $userOptions[$u->id] = $u->name;
+                                }
+                            @endphp
+                            <x-custom-select 
+                                name="user_id" 
+                                :options="$userOptions" 
+                                :selected="request('user_id')"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-red-500 focus:border-red-500 transition bg-white"
+                            />
                         </div>
 
                         <div>
                             <label for="action" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Aksi</label>
-                            <select name="action" id="action" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-red-500 focus:border-red-500 transition">
-                                <option value="">Semua Aksi</option>
-                                @foreach($actions as $act)
-                                    <option value="{{ $act }}" {{ request('action') == $act ? 'selected' : '' }}>{{ $act }}</option>
-                                @endforeach
-                            </select>
+                            @php
+                                $actionOptions = ['' => 'Semua Aksi'];
+                                foreach($actions as $act) {
+                                    $actionOptions[$act] = $act;
+                                }
+                            @endphp
+                            <x-custom-select 
+                                name="action" 
+                                :options="$actionOptions" 
+                                :selected="request('action')"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-red-500 focus:border-red-500 transition bg-white"
+                            />
                         </div>
 
                         <div>

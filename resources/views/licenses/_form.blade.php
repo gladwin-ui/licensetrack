@@ -317,13 +317,18 @@
             {{-- Template Dropdown --}}
             <div x-show="reminderMode === 'template'" class="border border-gray-100 rounded-xl p-4 bg-gray-50/30 space-y-3" x-cloak>
                 <label class="block text-sm font-medium text-gray-700">Pilih Template Pesan <span class="text-red-500">*</span></label>
-                <select name="message_template_id" x-model="templateId"
-                        class="w-full border {{ $errors->has('message_template_id') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition">
-                    <option value="">-- Pilih Template --</option>
-                    @foreach ($templates as $tmpl)
-                        <option value="{{ $tmpl->id }}">{{ $tmpl->name }} {{ $tmpl->is_default ? '(Default)' : '' }}</option>
-                    @endforeach
-                </select>
+                @php
+                    $tmplOptions = ['' => '-- Pilih Template --'];
+                    foreach($templates as $tmpl) {
+                        $tmplOptions[$tmpl->id] = $tmpl->name . ($tmpl->is_default ? ' (Default)' : '');
+                    }
+                @endphp
+                <x-custom-select 
+                    name="message_template_id" 
+                    xModel="templateId"
+                    :options="$tmplOptions" 
+                    class="w-full border {{ $errors->has('message_template_id') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition bg-white"
+                />
                 @error('message_template_id')
                     <p class="text-red-500 text-xs">{{ $message }}</p>
                 @enderror

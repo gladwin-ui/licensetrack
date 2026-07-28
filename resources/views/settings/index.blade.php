@@ -88,11 +88,16 @@
                                 <p class="text-xs text-gray-400 mt-1">Pilih kanal pengiriman WhatsApp.</p>
                             </div>
                             <div class="md:col-span-2">
-                                <select id="wa_gateway" name="wa_gateway" class="block w-full max-w-md border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/40 rounded-md shadow-sm text-sm transition">
-                                    <option value="log" {{ old('wa_gateway', $currentGateway) === 'log' ? 'selected' : '' }}>Log Only (Development)</option>
-                                    <option value="meta" {{ old('wa_gateway', $currentGateway) === 'meta' ? 'selected' : '' }}>Meta Cloud API (Live)</option>
-                                    <option value="fonnte" {{ old('wa_gateway', $currentGateway) === 'fonnte' ? 'selected' : '' }}>Fonnte (WhatsApp Indonesia)</option>
-                                </select>
+                                <x-custom-select 
+                                    name="wa_gateway" 
+                                    :options="[
+                                        'log' => 'Log Only (Development)',
+                                        'meta' => 'Meta Cloud API (Live)',
+                                        'fonnte' => 'Fonnte (WhatsApp Indonesia)'
+                                    ]" 
+                                    :selected="old('wa_gateway', $currentGateway)"
+                                    class="block w-full max-w-md border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/40 rounded-md shadow-sm text-sm transition px-3 py-2 bg-white"
+                                />
                                 <x-input-error class="mt-2" :messages="$errors->get('wa_gateway')" />
                             </div>
                         </div>
@@ -685,10 +690,15 @@ Terima kasih.</div>
                         </div>
                         <div>
                             <x-input-label for="template" :value="__('Template')" />
-                            <select id="template" name="template" class="mt-1 block w-full max-w-md border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/40 rounded-md shadow-sm text-sm transition">
-                                <option value="reminder">Reminder (Akan Berakhir)</option>
-                                <option value="expired">Expired (Sudah Berakhir)</option>
-                            </select>
+                            <x-custom-select 
+                                name="template" 
+                                :options="[
+                                    'reminder' => 'Reminder (Akan Berakhir)',
+                                    'expired' => 'Expired (Sudah Berakhir)'
+                                ]" 
+                                :selected="old('template')"
+                                class="mt-1 block w-full max-w-md border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/40 rounded-md shadow-sm text-sm transition px-3 py-2 bg-white"
+                            />
                             <x-input-error class="mt-2" :messages="$errors->get('template')" />
                         </div>
                         <div>

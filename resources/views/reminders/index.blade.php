@@ -28,12 +28,17 @@
                 <form method="GET" action="{{ route('reminders.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
-                        <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-red-500 focus:border-red-500">
-                            <option value="">Semua Status</option>
-                            <option value="sent" {{ request('status') === 'sent' ? 'selected' : '' }}>Terkirim</option>
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Tertunda / Proses</option>
-                            <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Gagal</option>
-                        </select>
+                        <x-custom-select 
+                            name="status" 
+                            :options="[
+                                '' => 'Semua Status',
+                                'sent' => 'Terkirim',
+                                'pending' => 'Tertunda / Proses',
+                                'failed' => 'Gagal'
+                            ]" 
+                            :selected="request('status')"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-red-500 focus:border-red-500 bg-white"
+                        />
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Cari Lisensi / PIC</label>

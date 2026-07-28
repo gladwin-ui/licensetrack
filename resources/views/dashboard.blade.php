@@ -76,12 +76,7 @@
 
             {{-- Card 3: Kritis (1–30 Hari) --}}
             <a href="{{ route('dashboard', ['health' => 'kritis']) }}" class="bg-white rounded-xl border {{ request('health') === 'kritis' ? 'border-red-400 ring-1 ring-red-400/30 shadow-md' : 'border-gray-200/70 shadow-sm' }} p-5 hover:shadow-md hover:scale-[1.01] transition duration-200 group block relative">
-                @if ($expiringIn30 > 0)
-                    <span class="absolute top-4 right-4 flex h-2 w-2">
-                        <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-                    </span>
-                @endif
+
                 <div class="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -119,36 +114,47 @@
                 {{-- Filter vendor --}}
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Vendor / Instansi</label>
-                    <select name="vendor" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition">
-                        <option value="">Semua Vendor</option>
-                        @foreach ($vendors as $v)
-                            <option value="{{ $v }}" {{ request('vendor') === $v ? 'selected' : '' }}>{{ $v }}</option>
-                        @endforeach
-                    </select>
+                    @php
+                        $vendorOptions = ['' => 'Semua Vendor'];
+                        foreach($vendors as $v) { $vendorOptions[$v] = $v; }
+                    @endphp
+                    <x-custom-select 
+                        name="vendor" 
+                        :options="$vendorOptions" 
+                        :selected="request('vendor')" 
+                    />
                 </div>
 
                 {{-- Filter status health --}}
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Status Kesehatan</label>
-                    <select name="health" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition">
-                        <option value="">Semua Status</option>
-                        <option value="aman"    {{ request('health') === 'aman'    ? 'selected' : '' }}>🟢 Aman (>90 hari)</option>
-                        <option value="waspada" {{ request('health') === 'waspada' ? 'selected' : '' }}>🟡 Waspada (31–90 hari)</option>
-                        <option value="kritis"  {{ request('health') === 'kritis'  ? 'selected' : '' }}>🟠 Kritis (1–30 hari)</option>
-                        <option value="expired" {{ request('health') === 'expired' ? 'selected' : '' }}>🔴 Expired (<=0 hari)</option>
-                    </select>
+                    <x-custom-select 
+                        name="health" 
+                        :options="[
+                            '' => 'Semua Status',
+                            'aman' => '🟢 Aman (>90 hari)',
+                            'waspada' => '🟡 Waspada (31–90 hari)',
+                            'kritis' => '🟠 Kritis (1–30 hari)',
+                            'expired' => '🔴 Expired (<=0 hari)'
+                        ]" 
+                        :selected="request('health')" 
+                    />
                 </div>
 
                 {{-- Filter status lisensi + Tombol --}}
                 <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
                     <div class="flex-1">
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Status Aktif</label>
-                        <select name="status" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition">
-                            <option value="">Semua</option>
-                            <option value="active"    {{ request('status') === 'active'    ? 'selected' : '' }}>Aktif</option>
-                            <option value="renewed"   {{ request('status') === 'renewed'   ? 'selected' : '' }}>Diperpanjang</option>
-                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Dibatalkan</option>
-                        </select>
+                        <x-custom-select 
+                            name="status" 
+                            :options="[
+                                '' => 'Semua',
+                                'active' => 'Aktif',
+                                'renewed' => 'Diperpanjang',
+                                'cancelled' => 'Dibatalkan'
+                            ]" 
+                            :selected="request('status')" 
+                        />
                     </div>
                     <div class="flex items-end gap-2 mt-2 sm:mt-0">
                         <button type="submit" class="flex-1 sm:flex-initial justify-center bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-2xl text-sm transition shadow-sm active:scale-[0.98] whitespace-nowrap">

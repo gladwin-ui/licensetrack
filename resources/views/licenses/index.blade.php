@@ -58,24 +58,33 @@
                         <label class="block text-xs font-medium text-gray-500 mb-1">Cari Nama Lisensi</label>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama..." class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition">
                     </div>
-                    <div>
+                    <div class="w-full sm:w-48">
                         <label class="block text-xs font-medium text-gray-500 mb-1">Vendor</label>
-                        <select name="vendor" class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition">
-                            <option value="">Semua Vendor</option>
-                            @foreach ($vendors as $v)
-                                <option value="{{ $v }}" {{ request('vendor') === $v ? 'selected' : '' }}>{{ $v }}</option>
-                            @endforeach
-                        </select>
+                        @php
+                            $vendorOptions = ['' => 'Semua Vendor'];
+                            foreach($vendors as $v) { $vendorOptions[$v] = $v; }
+                        @endphp
+                        <x-custom-select 
+                            name="vendor" 
+                            :options="$vendorOptions" 
+                            :selected="request('vendor')" 
+                            class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition px-3 py-2 bg-white"
+                        />
                     </div>
-                    <div>
+                    <div class="w-full sm:w-48">
                         <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
-                        <select name="health" class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition">
-                            <option value="">Semua Status</option>
-                            <option value="aman" {{ request('health') === 'aman' ? 'selected' : '' }}>Aman</option>
-                            <option value="waspada" {{ request('health') === 'waspada' ? 'selected' : '' }}>Waspada</option>
-                            <option value="kritis" {{ request('health') === 'kritis' ? 'selected' : '' }}>Kritis</option>
-                            <option value="expired" {{ request('health') === 'expired' ? 'selected' : '' }}>Expired</option>
-                        </select>
+                        <x-custom-select 
+                            name="health" 
+                            :options="[
+                                '' => 'Semua Status',
+                                'aman' => '🟢 Aman',
+                                'waspada' => '🟡 Waspada',
+                                'kritis' => '🟠 Kritis',
+                                'expired' => '🔴 Expired'
+                            ]" 
+                            :selected="request('health')" 
+                            class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition px-3 py-2 bg-white"
+                        />
                     </div>
                     <div class="flex flex-wrap sm:flex-nowrap gap-2 items-end">
                         <button type="submit" class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98] whitespace-nowrap">Filter</button>
