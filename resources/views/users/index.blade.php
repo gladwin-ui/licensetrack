@@ -181,13 +181,15 @@
                                             {{ $user->last_login_at ? $user->last_login_at->format('d/m/Y H:i') : 'Belum pernah login' }}
                                         </td>
                                         <td class="px-5 py-4 text-center">
-                                            <div class="flex items-center justify-center gap-3">
+                                            <div class="flex items-center justify-center gap-2">
                                                 <!-- Send Password Reset Link -->
                                                 @if($user->status === \App\Models\User::STATUS_ACTIVE)
                                                     <form method="POST" action="{{ route('users.send-reset-link', $user) }}" onsubmit="return confirm('Kirim link reset password ke email admin ini?')" class="inline">
                                                         @csrf
-                                                        <button type="submit" class="text-slate-500 hover:text-slate-800 transition font-medium" title="Kirim Link Reset Password">
-                                                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                                                        <button type="submit" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition inline-flex items-center justify-center" title="Kirim Link Reset Password">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                            </svg>
                                                         </button>
                                                     </form>
                                                 @endif
@@ -198,8 +200,10 @@
                                                         promoteActionUrl = '{{ route('users.make-super-admin', $user) }}';
                                                         promoteName = '{{ $user->name }}';
                                                         showPromoteModal = true;
-                                                    " class="text-indigo-500 hover:text-indigo-700 transition font-medium" title="Jadikan Admin Utama">
-                                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                                                    " class="p-1.5 rounded-lg text-indigo-500 hover:bg-indigo-50 transition inline-flex items-center justify-center" title="Jadikan Admin Utama">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.246.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.772-.564-.373-1.81.588-1.81h4.908a1 1 0 00.951-.69l1.519-4.674z"/>
+                                                        </svg>
                                                     </button>
                                                 @endif
 
@@ -207,17 +211,23 @@
                                                 @if($user->id !== Auth::id())
                                                     <form method="POST" action="{{ route('users.toggle', $user) }}" onsubmit="return confirm('{{ $user->status === \App\Models\User::STATUS_ACTIVE ? 'Nonaktifkan admin ini? Ia tidak akan bisa login sampai diaktifkan kembali.' : 'Aktifkan admin ini? Ia akan bisa login kembali.' }}')" class="inline">
                                                         @csrf
-                                                        <button type="submit" class="transition font-medium {{ $user->status === \App\Models\User::STATUS_ACTIVE ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800' }}" title="{{ $user->status === \App\Models\User::STATUS_ACTIVE ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                                        <button type="submit" class="p-1.5 rounded-lg transition inline-flex items-center justify-center {{ $user->status === \App\Models\User::STATUS_ACTIVE ? 'text-red-500 hover:bg-red-50' : 'text-green-600 hover:bg-green-50' }}" title="{{ $user->status === \App\Models\User::STATUS_ACTIVE ? 'Nonaktifkan' : 'Aktifkan' }}">
                                                             @if($user->status === \App\Models\User::STATUS_ACTIVE)
-                                                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                                                </svg>
                                                             @else
-                                                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                </svg>
                                                             @endif
                                                         </button>
                                                     </form>
                                                 @else
-                                                    <span class="text-gray-300 cursor-not-allowed" title="Anda tidak dapat menonaktifkan akun Anda sendiri">
-                                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                    <span class="p-1.5 rounded-lg text-gray-300 cursor-not-allowed inline-flex items-center justify-center" title="Anda tidak dapat menonaktifkan akun Anda sendiri">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                                        </svg>
                                                     </span>
                                                 @endif
                                             </div>
