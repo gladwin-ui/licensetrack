@@ -84,7 +84,7 @@ class ReminderMessageBuilder
                 $introRaw = $license->messageTemplate->intro;
                 $closingRaw = $license->messageTemplate->closing;
             } else {
-                $defaultTemplate = \App\Models\MessageTemplate::where('is_default', true)->first();
+                $defaultTemplate = \App\Models\MessageTemplate::where('type', 'reminder')->where('is_default', true)->first();
                 $introRaw = $defaultTemplate ? $defaultTemplate->intro : 'Berikut adalah pengingat dari *{perusahaan}* mengenai lisensi yang berada di bawah tanggung jawab Anda:';
                 $closingRaw = $defaultTemplate ? $defaultTemplate->closing : 'Mohon segera mengkoordinasikan dan menindaklanjuti proses perpanjangan sebelum tanggal kedaluwarsa agar operasional perusahaan tetap berjalan lancar.';
             }
@@ -105,9 +105,25 @@ class ReminderMessageBuilder
                  . "{$closingResolved}\n\n"
                  . "Terima kasih.";
         } else {
+            // Resolve custom or template intro/closing for overdue
+            if (filled($license->overdue_message_intro) && filled($license->overdue_message_closing)) {
+                $introRaw = $license->overdue_message_intro;
+                $closingRaw = $license->overdue_message_closing;
+            } elseif ($license->overdue_message_template_id && $license->overdueMessageTemplate) {
+                $introRaw = $license->overdueMessageTemplate->intro;
+                $closingRaw = $license->overdueMessageTemplate->closing;
+            } else {
+                $defaultTemplate = \App\Models\MessageTemplate::where('type', 'overdue')->where('is_default', true)->first();
+                $introRaw = $defaultTemplate ? $defaultTemplate->intro : 'Pemberitahuan penting dari *{perusahaan}* bahwa lisensi di bawah tanggung jawab Anda *TELAH KEDALUWARSA*:';
+                $closingRaw = $defaultTemplate ? $defaultTemplate->closing : 'Mohon *SEGERA* menindaklanjuti pembaruan/perpanjangan lisensi ini karena dapat mengganggu aktivitas operasional perusahaan.';
+            }
+
+            $introResolved = \App\Services\MessagePlaceholderResolver::resolve($introRaw, $license, $contact);
+            $closingResolved = \App\Services\MessagePlaceholderResolver::resolve($closingRaw, $license, $contact);
+
             return "⚠️ *PERINGATAN KEDALUWARSA LISENSI* ⚠️\n\n"
                  . "Halo *{$picName}*,\n\n"
-                 . "Pemberitahuan penting dari *{$companyName}* bahwa lisensi di bawah tanggung jawab Anda *TELAH KEDALUWARSA*:\n\n"
+                 . "{$introResolved}\n\n"
                  . "📋 *INFORMASI LISENSI*\n"
                  . "• *Judul:* {$licenseName}\n"
                  . "• *Vendor / Penyedia:* {$vendorName}\n"
@@ -116,7 +132,7 @@ class ReminderMessageBuilder
                  . "• *Keterlambatan:* Terlewat {$daysRemainingAbs} hari yang lalu\n"
                  . "• *Status:* {$statusIndo}\n"
                  . "• *Deskripsi:* {$description}\n\n"
-                 . "Mohon *SEGERA* menindaklanjuti pembaruan/perpanjangan lisensi ini karena dapat mengganggu aktivitas operasional perusahaan.\n\n"
+                 . "{$closingResolved}\n\n"
                  . "Terima kasih.";
         }
     }

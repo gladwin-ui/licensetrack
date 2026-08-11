@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['name', 'intro', 'closing', 'is_default', 'created_by'])]
+#[Fillable(['name', 'intro', 'closing', 'is_default', 'created_by', 'type'])]
 class MessageTemplate extends Model
 {
     use HasFactory;
@@ -25,5 +25,10 @@ class MessageTemplate extends Model
     public function licenses(): HasMany
     {
         return $this->hasMany(License::class, 'message_template_id');
+    }
+
+    public function overdueLicenses(): HasMany
+    {
+        return $this->hasMany(License::class, 'overdue_message_template_id');
     }
 }

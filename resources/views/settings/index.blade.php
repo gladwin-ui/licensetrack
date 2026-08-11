@@ -338,75 +338,85 @@
                 {{-- ========================================================== --}}
                 <div class="bg-white border border-gray-200/70 rounded-xl shadow-sm overflow-hidden"
                      x-data="{
-                         openAddModal: false,
-                         openEditModal: false,
-                         editId: null,
-                         templateName: '',
-                         introText: '',
-                         closingText: '',
-                         templatesList: @js($templates->mapWithKeys(fn($t) => [$t->id => ['name' => $t->name, 'licenses_count' => $t->licenses_count]])),
-                         companyName: '{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}',
-                         
-                         get resolvedIntro() { return this.resolvePlaceholders(this.introText); },
-                         get resolvedClosing() { return this.resolvePlaceholders(this.closingText); },
-                         
-                         resolvePlaceholders(text) {
-                             if (!text) return '';
-                             return text
-                                 .replace(/{perusahaan}/g, this.companyName)
-                                 .replace(/{nama_pic}/g, 'Budi Santoso')
-                                 .replace(/{nama_lisensi}/g, 'Antivirus Kaspersky Endpoint')
-                                 .replace(/{vendor}/g, 'Kaspersky')
-                                 .replace(/{tanggal_mulai}/g, '20 Oktober 2025')
-                                 .replace(/{tanggal_berakhir}/g, '20 Oktober 2026')
-                                 .replace(/{sisa_hari}/g, '30');
-                         },
-                         
-                         insertPlaceholder(targetField, placeholder) {
-                             let text = targetField === 'intro' ? this.introText : this.closingText;
-                             let textarea = document.getElementById('modal_' + targetField + (this.editId ? '_edit' : '_add'));
-                             if (!textarea) {
-                                 if (targetField === 'intro') this.introText += placeholder;
-                                 else this.closingText += placeholder;
-                                 return;
-                             }
-                             let startPos = textarea.selectionStart;
-                             let endPos = textarea.selectionEnd;
-                             let newText = text.substring(0, startPos) + placeholder + text.substring(endPos, text.length);
-                             if (targetField === 'intro') {
-                                 this.introText = newText;
-                             } else {
-                                 this.closingText = newText;
-                             }
-                             textarea.focus();
-                             this.$nextTick(() => {
-                                 textarea.selectionStart = textarea.selectionEnd = startPos + placeholder.length;
-                             });
-                         },
-                         
-                         openEdit(tmpl) {
-                             this.editId = tmpl.id;
-                             this.templateName = tmpl.name;
-                             this.introText = tmpl.intro;
-                             this.closingText = tmpl.closing;
-                             this.openEditModal = true;
-                         },
-                         
-                         openAdd() {
-                             this.editId = null;
-                             this.templateName = '';
-                             this.introText = '';
-                             this.closingText = '';
-                             this.openAddModal = true;
-                         }
+                          openAddModal: false,
+                          openEditModal: false,
+                          editId: null,
+                          templateName: '',
+                          introText: '',
+                          closingText: '',
+                          activeTab: 'reminder',
+                          templateType: 'reminder',
+                          templatesList: @js($reminderTemplates->concat($overdueTemplates)->mapWithKeys(fn($t) => [$t->id => ['name' => $t->name, 'licenses_count' => $t->type === 'overdue' ? $t->overdue_licenses_count : $t->licenses_count]])),
+                          companyName: '{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}',
+                          
+                          get resolvedIntro() { return this.resolvePlaceholders(this.introText, this.templateType); },
+                          get resolvedClosing() { return this.resolvePlaceholders(this.closingText, this.templateType); },
+                          
+                          resolvePlaceholders(text, type) {
+                              if (!text) return '';
+                              let days = (type === 'overdue') ? '7 hari' : '30';
+                              let resolved = text
+                                  .replace(/{perusahaan}/g, this.companyName)
+                                  .replace(/{nama_pic}/g, 'Budi Santoso')
+                                  .replace(/{nama_lisensi}/g, 'Antivirus Kaspersky Endpoint')
+                                  .replace(/{vendor}/g, 'Kaspersky')
+                                  .replace(/{tanggal_mulai}/g, '20 Oktober 2025')
+                                  .replace(/{tanggal_berakhir}/g, '20 Oktober 2026');
+                              if (type === 'overdue') {
+                                  resolved = resolved.replace(/{hari_terlewat}/g, days);
+                              } else {
+                                  resolved = resolved.replace(/{sisa_hari}/g, days);
+                              }
+                              return resolved;
+                          },
+                          
+                          insertPlaceholder(targetField, placeholder) {
+                              let text = targetField === 'intro' ? this.introText : this.closingText;
+                              let textarea = document.getElementById('modal_' + targetField + (this.editId ? '_edit' : '_add'));
+                              if (!textarea) {
+                                  if (targetField === 'intro') this.introText += placeholder;
+                                  else this.closingText += placeholder;
+                                  return;
+                              }
+                              let startPos = textarea.selectionStart;
+                              let endPos = textarea.selectionEnd;
+                              let newText = text.substring(0, startPos) + placeholder + text.substring(endPos, text.length);
+                              if (targetField === 'intro') {
+                                  this.introText = newText;
+                              } else {
+                                  this.closingText = newText;
+                              }
+                              textarea.focus();
+                              this.$nextTick(() => {
+                                  textarea.selectionStart = textarea.selectionEnd = startPos + placeholder.length;
+                              });
+                          },
+                          
+                          openEdit(tmpl) {
+                              this.editId = tmpl.id;
+                              this.templateName = tmpl.name;
+                              this.introText = tmpl.intro;
+                              this.closingText = tmpl.closing;
+                              this.templateType = tmpl.type || 'reminder';
+                              this.openEditModal = true;
+                          },
+                          
+                          openAdd(type) {
+                              this.editId = null;
+                              this.templateName = '';
+                              this.introText = '';
+                              this.closingText = '';
+                              this.templateType = type || 'reminder';
+                              this.openAddModal = true;
+                          }
                      }">
-                    
+                     
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between">
                         <div>
                             <h2 class="font-display text-[15px] font-semibold text-gray-900 tracking-tight">Template Pesan</h2>
                             <p class="text-xs text-gray-400 mt-1 font-sans">Daftar template pesan pengingat WhatsApp kustom.</p>
                         </div>
-                        <button type="button" @click="openAdd()"
+                        <button type="button" @click="openAdd(activeTab)"
                                 class="inline-flex justify-center items-center gap-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98]">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -415,9 +425,24 @@
                         </button>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    {{-- Tab Selector --}}
+                    <div class="flex border-b border-gray-150 bg-gray-50/50 px-6">
+                        <button type="button" @click="activeTab = 'reminder'"
+                                :class="activeTab === 'reminder' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                                class="py-3 px-4 font-sans text-xs font-semibold border-b-2 transition">
+                            Pesan Pengingat
+                        </button>
+                        <button type="button" @click="activeTab = 'overdue'"
+                                :class="activeTab === 'overdue' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                                class="py-3 px-4 font-sans text-xs font-semibold border-b-2 transition">
+                            Pesan Kedaluwarsa
+                        </button>
+                    </div>
+
+                    {{-- TABLE: Reminder Templates --}}
+                    <div x-show="activeTab === 'reminder'" class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="bg-gray-50 text-xs text-gray-700 uppercase border-b border-gray-100">
+                            <thead class="bg-gray-50 text-xs text-gray-700 uppercase border-b border-gray-100 font-sans">
                                 <tr>
                                     <th class="px-6 py-3 font-semibold">Nama Template</th>
                                     <th class="px-6 py-3 font-semibold">Kalimat Pembuka</th>
@@ -427,7 +452,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 text-gray-700">
-                                @forelse ($templates as $tmpl)
+                                @forelse ($reminderTemplates as $tmpl)
                                     <tr class="hover:bg-gray-50/50 transition">
                                         <td class="px-6 py-4 font-medium text-gray-900">
                                             <div class="flex items-center gap-2">
@@ -463,7 +488,63 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-6 py-8 text-center text-gray-400 font-sans">Belum ada template terdaftar.</td>
+                                        <td colspan="5" class="px-6 py-8 text-center text-gray-400 font-sans">Belum ada template pengingat terdaftar.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- TABLE: Overdue Templates --}}
+                    <div x-show="activeTab === 'overdue'" class="overflow-x-auto" x-cloak>
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="bg-gray-50 text-xs text-gray-700 uppercase border-b border-gray-100 font-sans">
+                                <tr>
+                                    <th class="px-6 py-3 font-semibold">Nama Template</th>
+                                    <th class="px-6 py-3 font-semibold">Kalimat Pembuka</th>
+                                    <th class="px-6 py-3 font-semibold">Kalimat Penutup</th>
+                                    <th class="px-6 py-3 font-semibold text-center">Penggunaan</th>
+                                    <th class="px-6 py-3 font-semibold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-gray-700">
+                                @forelse ($overdueTemplates as $tmpl)
+                                    <tr class="hover:bg-gray-50/50 transition">
+                                        <td class="px-6 py-4 font-medium text-gray-900">
+                                            <div class="flex items-center gap-2">
+                                                <span>{{ $tmpl->name }}</span>
+                                                @if ($tmpl->is_default)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-100">Default</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs font-sans max-w-xs truncate" title="{{ $tmpl->intro }}">{{ $tmpl->intro }}</td>
+                                        <td class="px-6 py-4 text-xs font-sans max-w-xs truncate" title="{{ $tmpl->closing }}">{{ $tmpl->closing }}</td>
+                                        <td class="px-6 py-4 text-center text-xs font-medium">{{ $tmpl->overdue_licenses_count }} Lisensi</td>
+                                        <td class="px-6 py-4 text-center">
+                                            <div class="inline-flex items-center justify-center gap-2">
+                                                @if (!$tmpl->is_default)
+                                                    <form method="POST" action="{{ route('settings.templates.default', $tmpl) }}">
+                                                        @csrf
+                                                        <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium transition">Jadikan Default</button>
+                                                    </form>
+                                                @endif
+                                                <button type="button" @click="openEdit({{ $tmpl->toJson() }})"
+                                                        class="text-xs text-gray-600 hover:text-gray-950 font-medium transition">Ubah</button>
+                                                
+                                                @if (!$tmpl->is_default && $tmpl->overdue_licenses_count === 0)
+                                                    <form method="POST" action="{{ route('settings.templates.destroy', $tmpl) }}"
+                                                          onsubmit="return confirm('Hapus template {{ $tmpl->name }}?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium transition">Hapus</button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-8 text-center text-gray-400 font-sans">Belum ada template pesan kedaluwarsa terdaftar.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -475,7 +556,7 @@
                         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="openAddModal = false"></div>
                         <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-4xl mx-4 overflow-hidden relative z-10 my-8 flex flex-col max-h-[85vh]">
                             <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-                                <h3 class="font-display text-[15px] font-semibold text-gray-900 tracking-tight">Tambah Template Pesan</h3>
+                                <h3 class="font-display text-[15px] font-semibold text-gray-900 tracking-tight" x-text="templateType === 'overdue' ? 'Tambah Template Pesan Kedaluwarsa' : 'Tambah Template Pesan Pengingat'">Tambah Template Pesan</h3>
                                 <button type="button" @click="openAddModal = false" class="text-gray-400 hover:text-gray-500 rounded p-1 hover:bg-slate-50 transition">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>
@@ -483,6 +564,7 @@
                             
                             <form method="POST" action="{{ route('settings.templates.store') }}" class="flex flex-col overflow-hidden">
                                 @csrf
+                                <input type="hidden" name="type" :value="templateType">
                                 <div class="p-5 overflow-y-auto text-left flex-1">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {{-- Kolom Kiri: Input Form --}}
@@ -510,7 +592,9 @@
                                                     <button type="button" @click="insertPlaceholder('intro', '{vendor}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
                                                     <button type="button" @click="insertPlaceholder('intro', '{tanggal_mulai}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
                                                     <button type="button" @click="insertPlaceholder('intro', '{tanggal_berakhir}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
-                                                    <button type="button" @click="insertPlaceholder('intro', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    
+                                                    <button type="button" x-show="templateType === 'reminder'" @click="insertPlaceholder('intro', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    <button type="button" x-show="templateType === 'overdue'" @click="insertPlaceholder('intro', '{hari_terlewat}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition" x-cloak>{hari_terlewat}</button>
                                                 </div>
                                             </div>
                                             
@@ -530,24 +614,26 @@
                                                     <button type="button" @click="insertPlaceholder('closing', '{vendor}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
                                                     <button type="button" @click="insertPlaceholder('closing', '{tanggal_mulai}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
                                                     <button type="button" @click="insertPlaceholder('closing', '{tanggal_berakhir}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
-                                                    <button type="button" @click="insertPlaceholder('closing', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    
+                                                    <button type="button" x-show="templateType === 'reminder'" @click="insertPlaceholder('closing', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    <button type="button" x-show="templateType === 'overdue'" @click="insertPlaceholder('closing', '{hari_terlewat}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition" x-cloak>{hari_terlewat}</button>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {{-- Kolom Kanan: Pratinjau Chat --}}
                                         <div class="flex flex-col h-full overflow-hidden">
-                                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pratinjau Pesan Uji Coba</span>
+                                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2" x-text="templateType === 'overdue' ? 'Pratinjau Pesan Uji Coba (Pesan Kedaluwarsa)' : 'Pratinjau Pesan Uji Coba (Pesan Pengingat)'">Pratinjau Pesan Uji Coba</span>
                                             <div class="flex-1 bg-[#E5DDD5] rounded-xl p-4 border border-slate-300/40 overflow-y-auto flex flex-col justify-start min-h-[300px]">
                                                 <div class="bg-white rounded-lg p-3 text-xs text-gray-800 shadow-sm leading-relaxed max-w-[92%]">
-                                                    <div class="whitespace-pre-wrap font-sans">Halo *Budi Santoso*,\n
+                                                    <div class="whitespace-pre-wrap font-sans"><span x-show="templateType === 'overdue'">⚠️ *PERINGATAN KEDALUWARSA LISENSI* ⚠️\n\n</span>Halo *Budi Santoso*,\n
 <span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedIntro || '(Kalimat pembuka kosong)'"></span>\n
 📋 *INFORMASI LISENSI*
 • *Judul:* Antivirus Kaspersky Endpoint
 • *Vendor / Penyedia:* Kaspersky
 • *License Key:* TEST-KEY-KASPERSKY
 • *Masa Berlaku:* 20 Oktober 2025 s/d 20 Oktober 2026
-• *Sisa Waktu:* 30 hari lagi
+• <span x-text="templateType === 'overdue' ? '*Keterlambatan:* Terlewat 7 hari yang lalu' : '*Sisa Waktu:* 30 hari lagi'"></span>
 • *Status:* Aktif
 • *Deskripsi:* Deskripsi contoh lisensi.\n
 <span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedClosing || '(Kalimat penutup kosong)'"></span>\n
@@ -570,7 +656,7 @@ Terima kasih.</div>
                         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="openEditModal = false"></div>
                         <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-4xl mx-4 overflow-hidden relative z-10 my-8 flex flex-col max-h-[85vh]">
                             <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-                                <h3 class="font-display text-[15px] font-semibold text-gray-900 tracking-tight">Ubah Template Pesan</h3>
+                                <h3 class="font-display text-[15px] font-semibold text-gray-900 tracking-tight" x-text="templateType === 'overdue' ? 'Ubah Template Pesan Kedaluwarsa' : 'Ubah Template Pesan Pengingat'">Ubah Template Pesan</h3>
                                 <button type="button" @click="openEditModal = false" class="text-gray-400 hover:text-gray-500 rounded p-1 hover:bg-slate-50 transition">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>
@@ -578,6 +664,7 @@ Terima kasih.</div>
                             
                             <form method="POST" :action="'{{ url('settings/templates') }}/' + editId" class="flex flex-col overflow-hidden">
                                 @csrf @method('PUT')
+                                <input type="hidden" name="type" :value="templateType">
                                 <div class="p-5 overflow-y-auto text-left flex-1">
                                     
                                     {{-- Alert Warning if template used by licenses --}}
@@ -617,7 +704,9 @@ Terima kasih.</div>
                                                     <button type="button" @click="insertPlaceholder('intro', '{vendor}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
                                                     <button type="button" @click="insertPlaceholder('intro', '{tanggal_mulai}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
                                                     <button type="button" @click="insertPlaceholder('intro', '{tanggal_berakhir}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
-                                                    <button type="button" @click="insertPlaceholder('intro', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    
+                                                    <button type="button" x-show="templateType === 'reminder'" @click="insertPlaceholder('intro', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    <button type="button" x-show="templateType === 'overdue'" @click="insertPlaceholder('intro', '{hari_terlewat}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition" x-cloak>{hari_terlewat}</button>
                                                 </div>
                                             </div>
                                             
@@ -637,24 +726,26 @@ Terima kasih.</div>
                                                     <button type="button" @click="insertPlaceholder('closing', '{vendor}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
                                                     <button type="button" @click="insertPlaceholder('closing', '{tanggal_mulai}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
                                                     <button type="button" @click="insertPlaceholder('closing', '{tanggal_berakhir}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
-                                                    <button type="button" @click="insertPlaceholder('closing', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    
+                                                    <button type="button" x-show="templateType === 'reminder'" @click="insertPlaceholder('closing', '{sisa_hari}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{sisa_hari}</button>
+                                                    <button type="button" x-show="templateType === 'overdue'" @click="insertPlaceholder('closing', '{hari_terlewat}')" class="px-2 py-0.5 text-[9px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition" x-cloak>{hari_terlewat}</button>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {{-- Kolom Kanan: Pratinjau Chat --}}
                                         <div class="flex flex-col h-full overflow-hidden">
-                                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pratinjau Pesan Uji Coba</span>
+                                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2" x-text="templateType === 'overdue' ? 'Pratinjau Pesan Uji Coba (Pesan Kedaluwarsa)' : 'Pratinjau Pesan Uji Coba (Pesan Pengingat)'">Pratinjau Pesan Uji Coba</span>
                                             <div class="flex-1 bg-[#E5DDD5] rounded-xl p-4 border border-slate-300/40 overflow-y-auto flex flex-col justify-start min-h-[300px]">
                                                 <div class="bg-white rounded-lg p-3 text-xs text-gray-800 shadow-sm leading-relaxed max-w-[92%]">
-                                                    <div class="whitespace-pre-wrap font-sans">Halo *Budi Santoso*,\n
+                                                    <div class="whitespace-pre-wrap font-sans"><span x-show="templateType === 'overdue'">⚠️ *PERINGATAN KEDALUWARSA LISENSI* ⚠️\n\n</span>Halo *Budi Santoso*,\n
 <span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedIntro || '(Kalimat pembuka kosong)'"></span>\n
 📋 *INFORMASI LISENSI*
 • *Judul:* Antivirus Kaspersky Endpoint
 • *Vendor / Penyedia:* Kaspersky
 • *License Key:* TEST-KEY-KASPERSKY
 • *Masa Berlaku:* 20 Oktober 2025 s/d 20 Oktober 2026
-• *Sisa Waktu:* 30 hari lagi
+• <span x-text="templateType === 'overdue' ? '*Keterlambatan:* Terlewat 7 hari yang lalu' : '*Sisa Waktu:* 30 hari lagi'"></span>
 • *Status:* Aktif
 • *Deskripsi:* Deskripsi contoh lisensi.\n
 <span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedClosing || '(Kalimat penutup kosong)'"></span>\n

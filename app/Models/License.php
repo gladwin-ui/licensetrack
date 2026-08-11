@@ -25,6 +25,10 @@ class License extends Model
         'message_template_id',
         'message_intro',
         'message_closing',
+        'overdue_reminder_mode',
+        'overdue_message_template_id',
+        'overdue_message_intro',
+        'overdue_message_closing',
     ];
 
     protected $casts = [
@@ -60,6 +64,11 @@ class License extends Model
     public function messageTemplate(): BelongsTo
     {
         return $this->belongsTo(MessageTemplate::class, 'message_template_id');
+    }
+
+    public function overdueMessageTemplate(): BelongsTo
+    {
+        return $this->belongsTo(MessageTemplate::class, 'overdue_message_template_id');
     }
 
     // -------------------------------------------------------------------------

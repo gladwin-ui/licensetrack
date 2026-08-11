@@ -74,19 +74,34 @@ class LicenseController extends Controller
     public function store(StoreLicenseRequest $request, ReminderScheduler $scheduler): RedirectResponse
     {
         $license = DB::transaction(function () use ($request) {
+            $reminderMode = $request->reminder_mode;
+            $overdueMode = $request->overdue_reminder_mode;
+
+            $messageTemplateId = $reminderMode === 'template' ? $request->message_template_id : null;
+            $messageIntro = $reminderMode === 'custom' ? $request->message_intro : null;
+            $messageClosing = $reminderMode === 'custom' ? $request->message_closing : null;
+
+            $overdueTemplateId = $overdueMode === 'template' ? $request->overdue_message_template_id : null;
+            $overdueIntro = $overdueMode === 'custom' ? $request->overdue_message_intro : null;
+            $overdueClosing = $overdueMode === 'custom' ? $request->overdue_message_closing : null;
+
             // Create the license record
             $license = License::create([
-                'name'                => $request->name,
-                'vendor'              => $request->vendor,
-                'description'         => $request->description,
-                'license_key'         => $request->license_key,
-                'start_date'          => $request->start_date,
-                'end_date'            => $request->end_date,
-                'status'              => $request->status,
-                'created_by'          => auth()->id(),
-                'message_template_id' => $request->message_template_id,
-                'message_intro'       => $request->message_intro,
-                'message_closing'     => $request->message_closing,
+                'name'                        => $request->name,
+                'vendor'                      => $request->vendor,
+                'description'                 => $request->description,
+                'license_key'                 => $request->license_key,
+                'start_date'                  => $request->start_date,
+                'end_date'                    => $request->end_date,
+                'status'                      => $request->status,
+                'created_by'                  => auth()->id(),
+                'message_template_id'         => $messageTemplateId,
+                'message_intro'               => $messageIntro,
+                'message_closing'             => $messageClosing,
+                'overdue_reminder_mode'       => $overdueMode,
+                'overdue_message_template_id' => $overdueTemplateId,
+                'overdue_message_intro'       => $overdueIntro,
+                'overdue_message_closing'     => $overdueClosing,
             ]);
 
             // Save contacts
@@ -136,17 +151,32 @@ class LicenseController extends Controller
         $oldEndDate = $license->end_date->format('Y-m-d');
 
         DB::transaction(function () use ($request, $license) {
+            $reminderMode = $request->reminder_mode;
+            $overdueMode = $request->overdue_reminder_mode;
+
+            $messageTemplateId = $reminderMode === 'template' ? $request->message_template_id : null;
+            $messageIntro = $reminderMode === 'custom' ? $request->message_intro : null;
+            $messageClosing = $reminderMode === 'custom' ? $request->message_closing : null;
+
+            $overdueTemplateId = $overdueMode === 'template' ? $request->overdue_message_template_id : null;
+            $overdueIntro = $overdueMode === 'custom' ? $request->overdue_message_intro : null;
+            $overdueClosing = $overdueMode === 'custom' ? $request->overdue_message_closing : null;
+
             $license->update([
-                'name'                => $request->name,
-                'vendor'              => $request->vendor,
-                'description'         => $request->description,
-                'license_key'         => $request->license_key,
-                'start_date'          => $request->start_date,
-                'end_date'            => $request->end_date,
-                'status'              => $request->status,
-                'message_template_id' => $request->message_template_id,
-                'message_intro'       => $request->message_intro,
-                'message_closing'     => $request->message_closing,
+                'name'                        => $request->name,
+                'vendor'                      => $request->vendor,
+                'description'                 => $request->description,
+                'license_key'                 => $request->license_key,
+                'start_date'                  => $request->start_date,
+                'end_date'                    => $request->end_date,
+                'status'                      => $request->status,
+                'message_template_id'         => $messageTemplateId,
+                'message_intro'               => $messageIntro,
+                'message_closing'             => $messageClosing,
+                'overdue_reminder_mode'       => $overdueMode,
+                'overdue_message_template_id' => $overdueTemplateId,
+                'overdue_message_intro'       => $overdueIntro,
+                'overdue_message_closing'     => $overdueClosing,
             ]);
 
             // Replace all contacts

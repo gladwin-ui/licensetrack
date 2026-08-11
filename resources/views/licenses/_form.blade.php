@@ -25,7 +25,13 @@
     introText: `{{ old('message_intro', $license->message_intro ?? '') }}`,
     closingText: `{{ old('message_closing', $license->message_closing ?? '') }}`,
 
-    templates: @js($templates->mapWithKeys(fn($t) => [$t->id => ['intro' => $t->intro, 'closing' => $t->closing]])),
+    // Overdue Template state
+    overdueMode: '{{ old('overdue_reminder_mode', isset($license) ? ($license->overdue_message_intro && $license->overdue_message_closing ? 'custom' : ($license->overdue_message_template_id ? 'template' : 'standard')) : 'standard') }}',
+    overdueTemplateId: '{{ old('overdue_message_template_id', $license->overdue_message_template_id ?? '') }}',
+    overdueIntroText: `{{ old('overdue_message_intro', $license->overdue_message_intro ?? '') }}`,
+    overdueClosingText: `{{ old('overdue_message_closing', $license->overdue_message_closing ?? '') }}`,
+
+    templates: @js($templates->mapWithKeys(fn($t) => [$t->id => ['intro' => $t->intro, 'closing' => $t->closing, 'type' => $t->type]])),
     companyName: '{{ setting('company_name', config('reminder.company_name', 'PT Hariff Dipa Persada')) }}',
 
     get resolvedIntro() {
@@ -54,6 +60,32 @@
         return this.resolvePlaceholders(raw);
     },
 
+    get resolvedOverdueIntro() {
+        let raw = '';
+        if (this.overdueMode === 'standard') {
+            raw = 'Pemberitahuan penting dari *{perusahaan}* bahwa lisensi di bawah tanggung jawab Anda *TELAH KEDALUWARSA*:';
+        } else if (this.overdueMode === 'template') {
+            let t = this.templates[this.overdueTemplateId];
+            raw = t ? t.intro : '';
+        } else {
+            raw = this.overdueIntroText;
+        }
+        return this.resolvePlaceholdersOverdue(raw);
+    },
+
+    get resolvedOverdueClosing() {
+        let raw = '';
+        if (this.overdueMode === 'standard') {
+            raw = 'Mohon *SEGERA* menindaklanjuti pembaruan/perpanjangan lisensi ini karena dapat mengganggu aktivitas operasional perusahaan.';
+        } else if (this.overdueMode === 'template') {
+            let t = this.templates[this.overdueTemplateId];
+            raw = t ? t.closing : '';
+        } else {
+            raw = this.overdueClosingText;
+        }
+        return this.resolvePlaceholdersOverdue(raw);
+    },
+
     resolvePlaceholders(text) {
         if (!text) return '';
         let days = '30';
@@ -77,6 +109,29 @@
             .replace(/{sisa_hari}/g, days);
     },
 
+    resolvePlaceholdersOverdue(text) {
+        if (!text) return '';
+        let overdueDays = '7 hari';
+        let name = document.getElementById('name')?.value || '[Nama Lisensi]';
+        let vendor = document.getElementById('vendor')?.value || '[Nama Vendor]';
+        let startVal = document.getElementById('start_date')?.value;
+        let endVal = document.getElementById('end_date')?.value;
+
+        let startFormat = startVal ? this.formatDate(startVal) : '[Tanggal Mulai]';
+        let endFormat = endVal ? this.formatDate(endVal) : '[Tanggal Berakhir]';
+
+        let picName = (this.contacts && this.contacts.length > 0 && this.contacts[0].name) ? this.contacts[0].name : '[Nama PIC]';
+
+        return text
+            .replace(/{perusahaan}/g, this.companyName)
+            .replace(/{nama_pic}/g, picName)
+            .replace(/{nama_lisensi}/g, name)
+            .replace(/{vendor}/g, vendor)
+            .replace(/{tanggal_mulai}/g, startFormat)
+            .replace(/{tanggal_berakhir}/g, endFormat)
+            .replace(/{hari_terlewat}/g, overdueDays);
+    },
+
     formatDate(dateStr) {
         const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         const d = new Date(dateStr);
@@ -89,14 +144,28 @@
         if (!textarea) return;
         let startPos = textarea.selectionStart;
         let endPos = textarea.selectionEnd;
-        let text = targetField === 'message_intro' ? this.introText : this.closingText;
+        
+        let text = '';
+        if (targetField === 'message_intro') {
+            text = this.introText;
+        } else if (targetField === 'message_closing') {
+            text = this.closingText;
+        } else if (targetField === 'overdue_message_intro') {
+            text = this.overdueIntroText;
+        } else if (targetField === 'overdue_message_closing') {
+            text = this.overdueClosingText;
+        }
 
         let newText = text.substring(0, startPos) + placeholder + text.substring(endPos, text.length);
 
         if (targetField === 'message_intro') {
             this.introText = newText;
-        } else {
+        } else if (targetField === 'message_closing') {
             this.closingText = newText;
+        } else if (targetField === 'overdue_message_intro') {
+            this.overdueIntroText = newText;
+        } else if (targetField === 'overdue_message_closing') {
+            this.overdueClosingText = newText;
         }
 
         textarea.focus();
@@ -276,7 +345,7 @@
     {{-- Section: Pesan Pengingat --}}
     <div class="bg-white rounded-xl border border-gray-200/70 shadow-sm p-6 space-y-4">
         <div class="border-b border-gray-100 pb-3">
-            <h2 class="text-base font-semibold text-gray-900">Pesan Pengingat WhatsApp</h2>
+            <h2 class="text-base font-semibold text-gray-900">Pesan Pengingat</h2>
             <p class="text-xs text-gray-400 mt-0.5 font-sans">Atur kalimat pembuka dan penutup untuk pesan pengingat WhatsApp sebelum kedaluwarsa.</p>
         </div>
 
@@ -390,7 +459,7 @@
             {{-- Live Preview --}}
             <div class="border border-gray-150 rounded-xl p-5 bg-slate-50 space-y-2.5">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider font-sans">Pratinjau Pesan Terkirim (Sebelum Kadaluarsa)</span>
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider font-sans">Pratinjau Pesan Terkirim (Pesan Pengingat)</span>
                     <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 font-sans">Live Preview</span>
                 </div>
 
@@ -413,8 +482,152 @@ Terima kasih.</div>
                     </div>
                 </div>
                 <p class="text-[11px] text-gray-500 italic mt-1.5 font-sans">
-                    * Teks kustom digunakan untuk pengingat sebelum tanggal berakhir. Pesan untuk lisensi yang sudah lewat masa berlaku memakai teks bawaan sistem.
+                    * Teks kustom digunakan untuk pengingat sebelum tanggal berakhir.
                 </p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Section: Pesan Setelah Kedaluwarsa --}}
+    <div class="bg-white rounded-xl border border-gray-200/70 shadow-sm p-6 space-y-4">
+        <div class="border-b border-gray-100 pb-3">
+            <h2 class="text-base font-semibold text-gray-900">Pesan Kedaluwarsa</h2>
+            <p class="text-xs text-gray-400 mt-0.5 font-sans">Atur kalimat pembuka dan penutup untuk pesan pengingat WhatsApp setelah tanggal berakhir (mis. H+7, H+14).</p>
+        </div>
+
+        <div class="space-y-4">
+            {{-- Mode Radios --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {{-- Mode Standard --}}
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition"
+                       :class="overdueMode === 'standard' ? 'border-red-500 bg-red-55/10' : 'border-gray-200'">
+                    <input type="radio" name="overdue_reminder_mode" value="standard" x-model="overdueMode" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <span class="block text-sm font-semibold text-gray-800">Gunakan template standar</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">Memakai teks overdue bawaan sistem.</span>
+                    </div>
+                </label>
+
+                {{-- Mode Template --}}
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition"
+                       :class="overdueMode === 'template' ? 'border-red-500 bg-red-55/10' : 'border-gray-200'">
+                    <input type="radio" name="overdue_reminder_mode" value="template" x-model="overdueMode" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <span class="block text-sm font-semibold text-gray-800">Pilih template tersimpan</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">Gunakan salah satu template yang dikelola di pengaturan.</span>
+                    </div>
+                </label>
+
+                {{-- Mode Custom --}}
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition"
+                       :class="overdueMode === 'custom' ? 'border-red-500 bg-red-55/10' : 'border-gray-200'">
+                    <input type="radio" name="overdue_reminder_mode" value="custom" x-model="overdueMode" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <span class="block text-sm font-semibold text-gray-800">Tulis khusus untuk lisensi ini</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">Tulis kalimat pembuka & penutup unik untuk lisensi ini.</span>
+                    </div>
+                </label>
+            </div>
+
+            {{-- Template Dropdown --}}
+            <div x-show="overdueMode === 'template'" class="border border-gray-100 rounded-xl p-4 bg-gray-50/30 space-y-3" x-cloak>
+                <label class="block text-sm font-medium text-gray-700">Pilih Template Pesan <span class="text-red-500">*</span></label>
+                @php
+                    $overdueTmplOptions = ['' => '-- Pilih Template --'];
+                    foreach($templates->where('type', 'overdue') as $tmpl) {
+                        $overdueTmplOptions[$tmpl->id] = $tmpl->name . ($tmpl->is_default ? ' (Default)' : '');
+                    }
+                @endphp
+                <x-custom-select 
+                    name="overdue_message_template_id" 
+                    xModel="overdueTemplateId"
+                    :options="$overdueTmplOptions" 
+                    class="w-full border {{ $errors->has('overdue_message_template_id') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition bg-white"
+                />
+                @error('overdue_message_template_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Custom Textareas --}}
+            <div x-show="overdueMode === 'custom'" class="border border-gray-100 rounded-xl p-4 bg-gray-50/30 space-y-5" x-cloak>
+                <div class="grid grid-cols-1 gap-4">
+                    {{-- Intro --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-sm font-medium text-gray-700">Kalimat Pembuka <span class="text-red-500">*</span></label>
+                            <span class="text-xs text-gray-400 font-mono" x-text="overdueIntroText.length + '/500'">0/500</span>
+                        </div>
+                        <textarea name="overdue_message_intro" id="overdue_message_intro" x-model="overdueIntroText" rows="3" maxlength="500"
+                                  placeholder="Contoh: Pemberitahuan penting dari {perusahaan} bahwa lisensi..."
+                                  class="w-full border {{ $errors->has('overdue_message_intro') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                        @error('overdue_message_intro')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span class="text-xs text-gray-500 mr-1.5 font-medium">Sisipkan:</span>
+                            <button type="button" @click="insertPlaceholder('overdue_message_intro', '{perusahaan}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_intro', '{nama_pic}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_intro', '{nama_lisensi}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_intro', '{vendor}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_intro', '{tanggal_mulai}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_intro', '{tanggal_berakhir}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_intro', '{hari_terlewat}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{hari_terlewat}</button>
+                        </div>
+                    </div>
+
+                    {{-- Closing --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-sm font-medium text-gray-700">Kalimat Penutup <span class="text-red-500">*</span></label>
+                            <span class="text-xs text-gray-400 font-mono" x-text="overdueClosingText.length + '/500'">0/500</span>
+                        </div>
+                        <textarea name="overdue_message_closing" id="overdue_message_closing" x-model="overdueClosingText" rows="3" maxlength="500"
+                                  placeholder="Contoh: Mohon segera memproses perpanjangan lisensi..."
+                                  class="w-full border {{ $errors->has('overdue_message_closing') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition resize-none"></textarea>
+                        @error('overdue_message_closing')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span class="text-xs text-gray-500 mr-1.5 font-medium">Sisipkan:</span>
+                            <button type="button" @click="insertPlaceholder('overdue_message_closing', '{perusahaan}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{perusahaan}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_closing', '{nama_pic}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_pic}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_closing', '{nama_lisensi}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{nama_lisensi}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_closing', '{vendor}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{vendor}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_closing', '{tanggal_mulai}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_mulai}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_closing', '{tanggal_berakhir}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{tanggal_berakhir}</button>
+                            <button type="button" @click="insertPlaceholder('overdue_message_closing', '{hari_terlewat}')" class="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition">{hari_terlewat}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Live Preview --}}
+            <div class="border border-gray-150 rounded-xl p-5 bg-slate-50 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider font-sans">Pratinjau Pesan Terkirim (Pesan Kedaluwarsa)</span>
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 font-sans">Live Preview</span>
+                </div>
+
+                {{-- WhatsApp Chat Bubble Layout --}}
+                <div class="w-full bg-[#E5DDD5] rounded-xl p-4 shadow-inner max-w-lg overflow-hidden border border-slate-300/40 relative">
+                    <div class="bg-white rounded-lg p-3 text-sm text-gray-800 shadow-sm relative max-w-[92%] leading-relaxed">
+                        <div class="whitespace-pre-wrap font-sans text-xs select-text">⚠️ *PERINGATAN KEDALUWARSA LISENSI* ⚠️\n
+Halo *<span x-text="(contacts && contacts.length > 0 && contacts[0].name) ? contacts[0].name : '[Nama PIC]'"></span>*,\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedOverdueIntro"></span>\n
+📋 *INFORMASI LISENSI*
+• *Judul:* <span x-text="document.getElementById('name')?.value || '[Nama Lisensi]'"></span>
+• *Vendor / Penyedia:* <span x-text="document.getElementById('vendor')?.value || '[Nama Vendor]'"></span>
+• *License Key:* <span x-text="document.getElementById('license_key')?.value || '—'"></span>
+• *Masa Berlaku:* <span x-text="document.getElementById('start_date')?.value ? formatDate(document.getElementById('start_date').value) : '[Tanggal Mulai]'"></span> s/d <span x-text="document.getElementById('end_date')?.value ? formatDate(document.getElementById('end_date').value) : '[Tanggal Berakhir]'"></span>
+• *Keterlambatan:* Terlewat 7 hari yang lalu
+• *Status:* Aktif
+• *Deskripsi:* <span x-text="document.getElementById('description')?.value || '—'"></span>\n
+<span class="font-semibold text-slate-800 bg-slate-100 px-0.5 rounded" x-text="resolvedOverdueClosing"></span>\n
+Terima kasih.</div>
+                        <div class="text-[10px] text-gray-400 text-right mt-1.5 select-none font-mono">09:00 ✓✓</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

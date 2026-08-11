@@ -58,9 +58,18 @@ class SettingController extends Controller
         }
 
         $checkedAt = \App\Models\Setting::find('fonnte_device_checked_at')?->value;
-        $templates = \App\Models\MessageTemplate::withCount('licenses')->orderBy('name')->get();
+        
+        $reminderTemplates = \App\Models\MessageTemplate::where('type', 'reminder')
+            ->withCount('licenses')
+            ->orderBy('name')
+            ->get();
 
-        return view('settings.index', compact('fonnteDevice', 'maskedFonnteToken', 'checkedAt', 'templates'));
+        $overdueTemplates = \App\Models\MessageTemplate::where('type', 'overdue')
+            ->withCount('overdueLicenses')
+            ->orderBy('name')
+            ->get();
+
+        return view('settings.index', compact('fonnteDevice', 'maskedFonnteToken', 'checkedAt', 'reminderTemplates', 'overdueTemplates'));
     }
 
     public function update(Request $request, ReminderScheduler $scheduler)

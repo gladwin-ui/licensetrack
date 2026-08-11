@@ -25,6 +25,10 @@ class MessagePlaceholderResolver
         // Use raw or absolute daysRemaining depending on milestone, max(0) is safe for active reminders
         $daysRemaining = $license->daysRemaining !== null ? (string)$license->daysRemaining : '-';
 
+        $daysRemainingVal = $license->daysRemaining;
+        $overdueDays = ($daysRemainingVal !== null && $daysRemainingVal < 0) ? abs($daysRemainingVal) : 0;
+        $hariTerlewat = $overdueDays . ' hari';
+
         $replacements = [
             '{perusahaan}' => $companyName,
             '{nama_pic}' => $picName,
@@ -33,20 +37,21 @@ class MessagePlaceholderResolver
             '{tanggal_mulai}' => $startFormat,
             '{tanggal_berakhir}' => $endFormat,
             '{sisa_hari}' => $daysRemaining,
+            '{hari_terlewat}' => $hariTerlewat,
         ];
 
         return str_replace(array_keys($replacements), array_values($replacements), $text);
     }
 
     /**
-     * Validate placeholders in a string.
+     * Validate placeholders in a string based on type.
      * Returns an array of invalid placeholders, or empty array if valid.
      */
-    public static function validate(string $text): array
+    public static function validate(string $text, string $type = 'reminder'): array
     {
         preg_match_all('/\{[^}]+\}/', $text, $matches);
         
-        $validPlaceholders = [
+        $validReminder = [
             '{perusahaan}',
             '{nama_pic}',
             '{nama_lisensi}',
@@ -55,6 +60,18 @@ class MessagePlaceholderResolver
             '{tanggal_berakhir}',
             '{sisa_hari}',
         ];
+
+        $validOverdue = [
+            '{perusahaan}',
+            '{nama_pic}',
+            '{nama_lisensi}',
+            '{vendor}',
+            '{tanggal_mulai}',
+            '{tanggal_berakhir}',
+            '{hari_terlewat}',
+        ];
+        
+        $validPlaceholders = $type === 'overdue' ? $validOverdue : $validReminder;
         
         $invalid = [];
         if (!empty($matches[0])) {
