@@ -83,7 +83,7 @@
                                     </td>
                                     <td class="px-5 py-3.5 align-top">
                                         <div class="mb-1.5 flex flex-wrap gap-1">
-                                            @if($msg->reminderLog)
+                                            @if($msg->reminderLog || $msg->urgentAlertLog)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                                                     Otomatis
                                                 </span>
@@ -95,16 +95,41 @@
                                         </div>
 
                                         @if($msg->reminderLog)
-                                            <a href="{{ route('licenses.show', $msg->reminderLog->license_id) }}" class="font-medium text-slate-900 hover:text-red-600 transition hover:underline">
-                                                {{ Str::limit($msg->reminderLog->license->name, 30) }}
-                                            </a>
+                                            @if($msg->reminderLog->license && !$msg->reminderLog->license->trashed())
+                                                <a href="{{ route('licenses.show', $msg->reminderLog->license_id) }}" class="font-medium text-slate-900 hover:text-red-600 transition hover:underline">
+                                                    {{ Str::limit($msg->reminderLog->license->name, 30) }}
+                                                </a>
+                                            @else
+                                                <span class="font-medium text-slate-400">
+                                                    {{ Str::limit($msg->reminderLog->license->name ?? '[Lisensi Terhapus]', 30) }} <span class="text-[10px] text-red-500 font-semibold">(Terhapus)</span>
+                                                </span>
+                                            @endif
                                             <div class="text-xs text-slate-500 mt-0.5">
                                                 Milestone: {{ $msg->reminderLog->milestone >= 0 ? 'H-'.$msg->reminderLog->milestone : 'H+'.abs($msg->reminderLog->milestone) }}
                                             </div>
+                                        @elseif($msg->urgentAlertLog)
+                                            @if($msg->urgentAlertLog->license && !$msg->urgentAlertLog->license->trashed())
+                                                <a href="{{ route('licenses.show', $msg->urgentAlertLog->license_id) }}" class="font-medium text-slate-900 hover:text-red-600 transition hover:underline">
+                                                    {{ Str::limit($msg->urgentAlertLog->license->name, 30) }}
+                                                </a>
+                                            @else
+                                                <span class="font-medium text-slate-400">
+                                                    {{ Str::limit($msg->urgentAlertLog->license->name ?? '[Lisensi Terhapus]', 30) }} <span class="text-[10px] text-red-500 font-semibold">(Terhapus)</span>
+                                                </span>
+                                            @endif
+                                            <div class="text-xs text-slate-500 mt-0.5">
+                                                Milestone: H-0 (Urgent)
+                                            </div>
                                         @elseif($msg->contact && $msg->contact->license)
-                                            <a href="{{ route('licenses.show', $msg->contact->license_id) }}" class="font-medium text-slate-900 hover:text-red-600 transition hover:underline">
-                                                {{ Str::limit($msg->contact->license->name, 30) }}
-                                            </a>
+                                            @if(!$msg->contact->license->trashed())
+                                                <a href="{{ route('licenses.show', $msg->contact->license_id) }}" class="font-medium text-slate-900 hover:text-red-600 transition hover:underline">
+                                                    {{ Str::limit($msg->contact->license->name, 30) }}
+                                                </a>
+                                            @else
+                                                <span class="font-medium text-slate-400">
+                                                    {{ Str::limit($msg->contact->license->name, 30) }} <span class="text-[10px] text-red-500 font-semibold">(Terhapus)</span>
+                                                </span>
+                                            @endif
                                             <div class="text-xs text-slate-500 mt-0.5">
                                                 Jatuh tempo terdekat
                                             </div>

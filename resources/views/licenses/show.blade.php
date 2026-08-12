@@ -13,28 +13,83 @@
     <div class="py-8">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            {{-- Flash Message --}}
-            @if (session('success'))
-                <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3">
-                    {{ session('success') }}
+            {{-- Status Banners --}}
+            @if($license->lifecycle_status === 'stopped')
+                <div class="bg-slate-100 border border-slate-300 text-slate-700 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-sm">Pemantauan Lisensi Dihentikan</p>
+                        <p class="text-xs text-slate-500">
+                            Dihentikan pada {{ \Carbon\Carbon::parse($license->stopped_at)->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB oleh {{ $license->stoppedBy ? $license->stoppedBy->name : 'System' }}.
+                        </p>
+                    </div>
+                </div>
+            @elseif($license->lifecycle_status === 'active' && $license->daysRemaining <= 0)
+                <div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-red-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm text-red-800">Keputusan Diperlukan</p>
+                            <p class="text-xs text-red-600">Lisensi ini telah melewati masa berlaku. Silakan lakukan perpanjangan tanggal atau hentikan pemantauan.</p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
             {{-- Action Buttons --}}
-            <div class="flex justify-end gap-3">
+            <div class="flex flex-wrap justify-end items-center gap-3" x-data="{ showLifecycleModal: false, lifecycleMode: 'renew', startDate: '{{ $license->end_date->copy()->addDay()->format('Y-m-d') }}', endDate: '' }">
                 <form method="POST" action="{{ route('licenses.reminders.send-now', $license) }}" onsubmit="confirmSendReminder(event, this)" class="flex-1 sm:flex-initial">
                     @csrf
-                    <button type="submit" class="w-full sm:w-auto justify-center inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-sm active:scale-[0.98]">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="submit" 
+                            @disabled($license->lifecycle_status === 'stopped')
+                            class="w-full sm:w-auto justify-center inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                         </svg>
                         <span>Kirim reminder sekarang</span>
                     </button>
                 </form>
 
+                @if($license->lifecycle_status === 'active')
+                    <button type="button" @click="lifecycleMode = 'renew'; showLifecycleModal = true"
+                            class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-2xl text-xs font-semibold hover:bg-indigo-700 transition text-center active:scale-[0.98] shadow-sm">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Perpanjang</span>
+                    </button>
+
+                    <form id="stop-license-form" method="POST" action="{{ route('licenses.stop', $license) }}" class="flex-1 sm:flex-initial">
+                        @csrf
+                        <button type="button" onclick="confirmStopLicense(event)"
+                                class="w-full sm:w-auto justify-center inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-2xl text-xs font-semibold transition active:scale-[0.98] shadow-sm">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                            </svg>
+                            <span>Hentikan</span>
+                        </button>
+                    </form>
+                @else
+                    <button type="button" @click="lifecycleMode = 'reactivate'; showLifecycleModal = true"
+                            class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-2xl text-xs font-semibold hover:bg-emerald-700 transition text-center active:scale-[0.98] shadow-sm">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Aktifkan Kembali</span>
+                    </button>
+                @endif
+
                 <a href="{{ route('licenses.edit', $license) }}"
                    class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-2xl text-xs font-semibold hover:bg-slate-50 transition text-center active:scale-[0.98] shadow-sm">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
                     <span>Edit</span>
@@ -83,6 +138,56 @@
                                 </form>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {{-- Modal Perpanjang / Aktifkan Kembali --}}
+                <div x-show="showLifecycleModal" x-cloak
+                     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+                     @click.away="showLifecycleModal = false"
+                     @keydown.escape.window="showLifecycleModal = false">
+                    <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4" @click.stop>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                 :class="lifecycleMode === 'renew' ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-display font-semibold text-gray-800 tracking-tight text-base" 
+                                    x-text="lifecycleMode === 'renew' ? 'Perpanjang Lisensi' : 'Aktifkan Kembali' || ''"></h3>
+                                <p class="text-xs text-gray-500"
+                                   x-text="lifecycleMode === 'renew' ? 'Masukkan periode tanggal perpanjangan lisensi baru.' : 'Aktifkan kembali lisensi yang dihentikan dengan periode baru.' || ''"></p>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" :action="lifecycleMode === 'renew' ? '{{ route('licenses.renew', $license) }}' : '{{ route('licenses.reactivate', $license) }}'">
+                            @csrf
+                            <div class="space-y-4 mb-6 text-left">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal Mulai Baru <span class="text-red-500">*</span></label>
+                                    <input type="date" name="start_date" x-model="startDate" required
+                                           class="w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal Berakhir Baru <span class="text-red-500">*</span></label>
+                                    <input type="date" name="end_date" x-model="endDate" required
+                                           class="w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3 justify-end">
+                                <button type="button" @click="showLifecycleModal = false"
+                                        class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                    Batal
+                                </button>
+                                <button type="submit"
+                                        class="px-4 py-2 text-sm font-medium text-white rounded-lg"
+                                        :class="lifecycleMode === 'renew' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'"
+                                        x-text="lifecycleMode === 'renew' ? 'Perpanjang' : 'Aktifkan Kembali' || ''"></button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -220,11 +325,11 @@
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h3 class="font-display text-[15px] font-semibold text-gray-700 tracking-tight mb-6">Jadwal Pengingat</h3>
                 
-                @if ($license->reminderLogs->isEmpty())
+                @if (empty($timelineItems))
                     <p class="text-sm text-gray-400 text-center py-4">Belum ada jadwal. Edit lisensi untuk membuat jadwal.</p>
                 @else
                     <div class="relative border-l-2 border-gray-100 ml-3 space-y-6">
-                        @foreach ($license->reminderLogs->sortByDesc('scheduled_at') as $log)
+                        @foreach ($timelineItems as $log)
                             @php
                                 $statusConf = match($log->status) {
                                     'sent'    => ['color' => 'text-green-600', 'bg' => 'bg-green-100', 'icon' => '✅', 'label' => 'Terkirim'],
@@ -245,7 +350,7 @@
                                 <div class="{{ $isPast && $log->status !== 'sent' && $log->status !== 'failed' ? 'opacity-60' : '' }}">
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="text-sm font-bold text-gray-800">
-                                            {{ $log->milestone >= 0 ? 'H-'.$log->milestone : 'H+'.abs($log->milestone) }}
+                                            {{ $log->label }}
                                         </span>
                                         <span class="text-xs font-medium {{ $statusConf['color'] }} bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
                                             {{ $statusConf['label'] }}
@@ -269,6 +374,35 @@
 
     @push('scripts')
     <script>
+        function confirmStopLicense(event) {
+            event.preventDefault();
+            Swal.fire({
+                title: "Hentikan Lisensi?",
+                text: "Lisensi tidak akan lagi dipantau atau dikirimi pengingat, namun tetap tersimpan di arsip dan dapat diaktifkan kembali.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d97706",
+                cancelButtonColor: "#6b7280",
+                confirmButtonText: "Ya, Hentikan!",
+                cancelButtonText: "Batal",
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: "Memproses...",
+                        text: "Mohon tunggu sebentar.",
+                        icon: "info",
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    document.getElementById('stop-license-form').submit();
+                }
+            });
+        }
+
         function confirmSendReminder(event, form) {
             event.preventDefault();
             Swal.fire({

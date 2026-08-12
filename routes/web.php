@@ -26,6 +26,9 @@ Route::middleware(['auth'])->group(function () {
 
     // License CRUD
     Route::resource('licenses', LicenseController::class);
+    Route::post('/licenses/{license}/renew', [LicenseController::class, 'renew'])->name('licenses.renew');
+    Route::post('/licenses/{license}/stop', [LicenseController::class, 'stop'])->name('licenses.stop');
+    Route::post('/licenses/{license}/reactivate', [LicenseController::class, 'reactivate'])->name('licenses.reactivate');
 
     // File download (authenticated, serves from private disk)
     Route::get('licenses/{license}/files/{file}/download', [LicenseFileController::class, 'download'])

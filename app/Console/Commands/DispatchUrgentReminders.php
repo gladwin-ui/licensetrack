@@ -44,12 +44,19 @@ class DispatchUrgentReminders extends Command
         $today = Carbon::today('Asia/Jakarta');
         $currentTime = Carbon::now('Asia/Jakarta')->format('H:i');
 
-        // 3. Ambil daftar slot yang sudah lewat
-        $slots = config('reminder.urgent_alert.times', ['09:00', '15:00']);
+        // 3. Ambil daftar slot yang sudah lewat secara dinamis
+        $time1 = setting('urgent_alert_time_1') ?: '09:00';
+        $time2 = setting('urgent_alert_time_2') ?: '15:00';
+
+        $slots = [
+            'slot_1' => $time1,
+            'slot_2' => $time2,
+        ];
+
         $passedSlots = [];
-        foreach ($slots as $slot) {
-            if ($currentTime >= $slot) {
-                $passedSlots[] = $slot;
+        foreach ($slots as $position => $time) {
+            if ($currentTime >= $time) {
+                $passedSlots[$position] = $time;
             }
         }
 
@@ -58,12 +65,13 @@ class DispatchUrgentReminders extends Command
             return;
         }
 
-        $this->info("Configured slots reached: " . implode(', ', $passedSlots));
+        $this->info("Configured slots reached: " . implode(', ', array_values($passedSlots)) . " (" . implode(', ', array_keys($passedSlots)) . ")");
 
-        // 4. Ambil lisensi dengan end_date = hari ini, status active/renewed
+        // 4. Ambil lisensi dengan end_date = hari ini, status active/renewed, dan lifecycle_status active
         $licenses = License::with(['contacts', 'messageTemplate'])
             ->whereDate('end_date', $today)
             ->whereIn('status', ['active', 'renewed'])
+            ->where('lifecycle_status', 'active')
             ->get();
 
         if ($licenses->isEmpty()) {
@@ -77,12 +85,12 @@ class DispatchUrgentReminders extends Command
 
         // 5. Untuk setiap kombinasi (lisensi x slot yang sudah lewat)
         foreach ($licenses as $license) {
-            foreach ($passedSlots as $slot) {
-                // Find or create UrgentAlertLog
+            foreach ($passedSlots as $position => $time) {
+                // Find or create UrgentAlertLog berdasarkan posisi slot ('slot_1' atau 'slot_2')
                 $log = UrgentAlertLog::firstOrCreate([
                     'license_id'  => $license->id,
                     'alert_date'  => $today->toDateString(),
-                    'slot'        => $slot,
+                    'slot'        => $position,
                 ], [
                     'status'      => 'pending',
                 ]);
@@ -98,7 +106,7 @@ class DispatchUrgentReminders extends Command
                     $log->update([
                         'status' => 'failed',
                     ]);
-                    $this->warn("  ✗ License [{$license->name}] has no contacts for slot [{$slot}]. Status set to failed.");
+                    $this->warn("  ✗ License [{$license->name}] has no contacts for slot [{$position}]. Status set to failed.");
                     $failedCount++;
                     continue;
                 }
@@ -108,52 +116,48 @@ class DispatchUrgentReminders extends Command
 
                 foreach ($license->contacts as $contact) {
                     try {
-                        // Tambahkan penanda slot pagi/sore ke isi pesan agar tidak identik persis
-                        $slotText = ($slot === '09:00') ? 'Pagi' : 'Sore';
-                        $adHocMarker = "\n*(Pengingat {$slotText} - Hari Terakhir)*";
-
-                        if ($gateway instanceof FonnteGateway) {
-                            $message = $builder->buildText($contact, $license, 0) . $adHocMarker;
-                            $result  = $gateway->send($contact->phone, '', [], $message);
-                            $body    = $message;
-                        } else {
-                            $messageData = $builder->build($license, $contact, 0);
-                            $messageData['body'] .= $adHocMarker;
-                            $result      = $gateway->send(
-                                $contact->phone,
-                                $messageData['template'],
-                                $messageData['parameters']
-                            );
-                            $body = $messageData['body'];
-                        }
+                         if ($gateway instanceof FonnteGateway) {
+                             $message = $builder->buildText($contact, $license, 0);
+                             $result  = $gateway->send($contact->phone, '', [], $message);
+                             $body    = $message;
+                         } else {
+                             $messageData = $builder->build($license, $contact, 0);
+                             $result      = $gateway->send(
+                                 $contact->phone,
+                                 $messageData['template'],
+                                 $messageData['parameters']
+                             );
+                             $body = $messageData['body'];
+                         }
 
                         // Record to whatsapp_messages (no reminder_log_id — ad-hoc urgent)
                         WhatsappMessage::create([
-                            'reminder_log_id'    => null,
-                            'license_contact_id' => $contact->id,
-                            'phone'              => $contact->phone,
-                            'body'               => $body,
-                            'status'             => $result['success'] ? 'sent' : 'failed',
-                            'wamid'              => $result['wamid'],
-                            'error_message'      => $result['error'],
-                            'sent_at'            => $result['success'] ? Carbon::now('Asia/Jakarta') : null,
+                            'reminder_log_id'     => null,
+                            'urgent_alert_log_id' => $log->id,
+                            'license_contact_id'  => $contact->id,
+                            'phone'               => $contact->phone,
+                            'body'                => $body,
+                            'status'              => $result['success'] ? 'sent' : 'failed',
+                            'wamid'               => $result['wamid'],
+                            'error_message'       => $result['error'],
+                            'sent_at'             => $result['success'] ? Carbon::now('Asia/Jakarta') : null,
                         ]);
 
                         if ($result['success']) {
                             $anyPicSuccess = true;
-                            $this->info("  ✓ Urgent alert sent to [{$contact->name}] for license [{$license->name}] (Slot {$slot}).");
+                            $this->info("  ✓ Urgent alert sent to [{$contact->name}] for license [{$license->name}] (Slot {$position}).");
                         } else {
-                            $this->error("  ✗ Failed to send to [{$contact->name}] (Slot {$slot}): {$result['error']}");
+                            $this->error("  ✗ Failed to send to [{$contact->name}] (Slot {$position}): {$result['error']}");
                         }
 
                     } catch (\Exception $e) {
                         Log::channel('whatsapp')->error('DispatchUrgentReminders Exception', [
                             'license' => $license->name,
                             'contact' => $contact->name,
-                            'slot'    => $slot,
+                            'slot'    => $position,
                             'error'   => $e->getMessage(),
                         ]);
-                        $this->error("  ✗ Exception for [{$contact->name}] (Slot {$slot}): {$e->getMessage()}");
+                        $this->error("  ✗ Exception for [{$contact->name}] (Slot {$position}): {$e->getMessage()}");
                     }
                 }
 

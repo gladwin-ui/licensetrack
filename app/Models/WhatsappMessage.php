@@ -12,6 +12,7 @@ class WhatsappMessage extends Model
 
     protected $fillable = [
         'reminder_log_id',
+        'urgent_alert_log_id',
         'license_contact_id',
         'phone',
         'body',
@@ -32,6 +33,11 @@ class WhatsappMessage extends Model
     public function reminderLog(): BelongsTo
     {
         return $this->belongsTo(ReminderLog::class);
+    }
+
+    public function urgentAlertLog(): BelongsTo
+    {
+        return $this->belongsTo(UrgentAlertLog::class);
     }
 
     public function contact(): BelongsTo

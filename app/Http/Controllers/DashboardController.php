@@ -17,15 +17,15 @@ class DashboardController extends Controller
         // ----------------------------------------------------------------
         // KPI Counts
         // ----------------------------------------------------------------
-        $totalLicenses     = License::count();
-        $expiringIn30      = License::expiringWithin(30)->count();
-        $expiringIn90      = License::whereBetween('end_date', [
+        $totalLicenses     = License::where('lifecycle_status', 'active')->count();
+        $expiringIn30      = License::where('lifecycle_status', 'active')->expiringWithin(30)->count();
+        $expiringIn90      = License::where('lifecycle_status', 'active')->whereBetween('end_date', [
             $today,
             $today->copy()->addDays(90),
         ])->count();
-        $expiredCount      = License::expired()->count();
-        $safeCount         = License::where('end_date', '>', $today->copy()->addDays(90))->count();
-        $warningCount      = License::whereBetween('end_date', [
+        $expiredCount      = License::where('lifecycle_status', 'active')->expired()->count();
+        $safeCount         = License::where('lifecycle_status', 'active')->where('end_date', '>', $today->copy()->addDays(90))->count();
+        $warningCount      = License::where('lifecycle_status', 'active')->whereBetween('end_date', [
             $today->copy()->addDays(31),
             $today->copy()->addDays(90),
         ])->count();
@@ -33,7 +33,7 @@ class DashboardController extends Controller
         // ----------------------------------------------------------------
         // Table Query with filters
         // ----------------------------------------------------------------
-        $query = License::with(['contacts' => function ($q) {
+        $query = License::where('lifecycle_status', 'active')->with(['contacts' => function ($q) {
             $q->where('is_primary', true)->orWhereIn('id', function ($sub) {
                 $sub->selectRaw('MIN(id)')
                     ->from('license_contacts')
@@ -76,7 +76,8 @@ class DashboardController extends Controller
         $licenses = $query->paginate(15)->withQueryString();
 
         // Get distinct vendors for filter dropdown
-        $vendors = License::whereNotNull('vendor')
+        $vendors = License::where('lifecycle_status', 'active')
+            ->whereNotNull('vendor')
             ->distinct()
             ->orderBy('vendor')
             ->pluck('vendor');
@@ -89,7 +90,9 @@ class DashboardController extends Controller
         ];
 
         $upcomingReminders = ReminderLog::with('license')
-            ->whereHas('license')
+            ->whereHas('license', function ($q) {
+                $q->where('lifecycle_status', 'active');
+            })
             ->where('status', 'pending')
             ->where('scheduled_at', '>=', now('Asia/Jakarta'))
             ->orderBy('scheduled_at')

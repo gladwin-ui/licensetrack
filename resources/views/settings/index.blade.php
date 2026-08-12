@@ -64,10 +64,39 @@
                             <div>
                                 <label for="reminder_send_time" class="text-sm font-medium text-gray-900">Jam Kirim</label>
                                 <p class="text-xs text-gray-400 mt-1">Mengubah jam akan menyesuaikan ulang jadwal pending.</p>
+                                <p class="text-[11px] text-gray-400 mt-1 italic">Berlaku untuk pengingat sebelum hari terakhir (H-90 s/d H-1).</p>
                             </div>
                             <div class="md:col-span-2">
                                 <x-text-input id="reminder_send_time" name="reminder_send_time" type="time" class="block w-full max-w-md focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition" :value="old('reminder_send_time', setting('reminder_send_time', config('reminder.send_time', '09:00')))" required />
                                 <x-input-error class="mt-2" :messages="$errors->get('reminder_send_time')" />
+                            </div>
+                        </div>
+
+                        <!-- Jadwal Pengingat Hari Terakhir (H-0) -->
+                        <div class="p-6 bg-slate-50/30">
+                            <h3 class="text-sm font-semibold text-gray-900">Jadwal Pengingat Hari Terakhir (H-0)</h3>
+                            <p class="text-xs text-gray-400 mt-1">Lisensi yang berakhir tepat hari ini dikirimi pengingat dua kali. Hanya untuk lisensi yang berakhir tepat hari ini.</p>
+                        </div>
+
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="urgent_alert_time_1" class="text-sm font-medium text-gray-900">Pengiriman Pertama</label>
+                                <p class="text-xs text-gray-400 mt-1">Jam untuk pengiriman alert H-0 yang pertama.</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <x-text-input id="urgent_alert_time_1" name="urgent_alert_time_1" type="time" class="block w-full max-w-md focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition" :value="old('urgent_alert_time_1', setting('urgent_alert_time_1', '09:00'))" required />
+                                <x-input-error class="mt-2" :messages="$errors->get('urgent_alert_time_1')" />
+                            </div>
+                        </div>
+
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="urgent_alert_time_2" class="text-sm font-medium text-gray-900">Pengiriman Kedua</label>
+                                <p class="text-xs text-gray-400 mt-1">Jam untuk pengiriman alert H-0 yang kedua.</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <x-text-input id="urgent_alert_time_2" name="urgent_alert_time_2" type="time" class="block w-full max-w-md focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition" :value="old('urgent_alert_time_2', setting('urgent_alert_time_2', '15:00'))" required />
+                                <x-input-error class="mt-2" :messages="$errors->get('urgent_alert_time_2')" />
                             </div>
                         </div>
 

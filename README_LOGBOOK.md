@@ -1,4 +1,4 @@
-# Logbook Pengembangan LicenseTrack — 13 Juli s/d 5 Agustus 2026
+# Logbook Pengembangan LicenseTrack — 13 Juli s/d 12 Agustus 2026
 
 Dokumentasi harian aktivitas dan capaian pembangunan web LicenseTrack
 (Sistem Manajemen & Pengingat Kedaluwarsa Lisensi), PT Hariff / Hariff Defense.
@@ -158,10 +158,55 @@ Disusun berdasarkan riwayat percakapan dan aktivitas pengembangan.
 
 ---
 
+## 11 Agustus 2026 — Fitur Baru: Template Pesan Setelah Kedaluwarsa (Day 13)
 
+### Aktivitas
+- Membuat migrasi database baru untuk menambahkan field `type` pada `message_templates` serta kolom overdue (`overdue_reminder_mode`, `overdue_message_template_id`, `overdue_message_intro`, `overdue_message_closing`) pada tabel `licenses`.
+- Mengimplementasikan seeder otomatis untuk template default overdue `'Template Overdue Standar'`.
+- Memperbarui model `MessageTemplate` dan `License` dengan relasi dan field fillable baru.
+- Menyesuaikan `MessagePlaceholderResolver` untuk mendukung placeholder `{hari_terlewat}` secara dinamis dan memvalidasi penggunaan placeholder agar tidak tertukar antara tipe template.
+- Menyesuaikan `ReminderMessageBuilder` untuk menghasilkan teks pengingat overdue yang tepat sesuai konfigurasi lisensi.
+- Memperbarui `StoreLicenseRequest` dan `UpdateLicenseRequest` untuk memvalidasi masukan field overdue baru.
+- Memperbarui `MessageTemplateController` agar mendukung aksi edit/hapus/set default secara independen per-tipe template.
+- Menyusun sub-bagian tab (Reminder vs. Setelah Kedaluwarsa) di halaman Pengaturan Template.
+- Menambahkan panel konfigurasi "Pesan Setelah Kedaluwarsa" di form tambah/ubah lisensi lengkap dengan live preview bubble gelembung chat WhatsApp.
 
-## Ringkasan Capaian 13 Juli – 5 Agustus 2026
+### Capaian
+- Sistem template pesan overdue (setelah kedaluwarsa) berfungsi penuh dengan pembatasan placeholder yang aman dan UI yang premium serta konsisten.
+
+---
+
+## 12 Agustus 2026 — Fitur Baru: Jadwal Alert Hari-H Dinamis (Day 14)
+
+### Aktivitas
+- Membuat migrasi database baru untuk mengubah tipe kolom `slot` pada tabel `urgent_alert_logs` menjadi `varchar(10)` dan melakukan migrasi riwayat pengiriman lama agar menggunakan representasi posisi slot (`slot_1` / `slot_2`).
+- Menyesuaikan command `reminders:dispatch-urgent` untuk membaca jadwal dinamis dari database, memproses pengiriman dengan database `urgent_alert_logs` berbasis posisi slot untuk menjamin idempotensi di bawah perubahan jam, serta menyusun tanda slot dinamis (`Pagi I` / `Sore II`) pada pesan.
+- Memperbarui `SettingController` dengan aturan validasi jam pertama dan kedua (jam kedua harus lebih malam dari pertama, jarak minimal 1 jam), menyimpan setelan baru ke database `settings`, serta mencatat riwayat perubahan ke log audit `settings.urgent_alert_times_updated`.
+- Memperbarui antarmuka UI halaman Pengaturan Sistem untuk menampilkan input tipe `time` bagi Pengiriman Pertama dan Kedua lengkap dengan teks pembeda yang jelas bagi pengguna.
+- **Koreksi Penghapusan Lisensi & Riwayat**: Mengubah fungsionalitas tombol Hapus Lisensi pada `LicenseController@destroy` menjadi soft delete (`$license->delete()`) alih-alih hard/force delete, dan membatalkan penghapusan baris riwayat `whatsapp_messages`. Memperbarui relasi model `LicenseContact`, `ReminderLog`, dan `UrgentAlertLog` untuk mendukung `withTrashed()`, serta menyesuaikan visualisasi riwayat (`reminders/index.blade.php`) dengan label merah `(Terhapus)` tanpa link 404 ketika lisensi terkait telah dihapus.
+- **Fitur Baru (Approval & Siklus Hidup Lisensi)**:
+  - Membuat migrasi database baru untuk menambahkan kolom `lifecycle_status` (`'active'` / `'stopped'`), `stopped_at`, dan `stopped_by` pada tabel `licenses`.
+  - Menambahkan migrasi database baru untuk menambahkan status `'skipped'` pada kolom `status` tabel `urgent_alert_logs`.
+  - Menyediakan form perpanjangan masa aktif (Renew) di detail lisensi yang memperbarui start/end date, meregenerasi antrean reminder untuk masa aktif baru, dan mengubah status ke `active` kembali.
+  - Menyediakan tombol "Hentikan" (Stop) dengan konfirmasi SweetAlert2 yang mengubah status lisensi menjadi `stopped`, menyimpan metadata pemutus (`stopped_at`, `stopped_by`), dan secara instan menandai sisa reminder pending reguler dan urgent alert H-0 sebagai `skipped`.
+  - Menyediakan tombol "Aktifkan Kembali" (Reactivate) untuk lisensi yang diarsip dengan input periode tanggal baru.
+  - Mengecualikan lisensi berstatus `stopped` dari dispatches di `reminders:dispatch` dan `reminders:dispatch-urgent`.
+  - Menyembunyikan lisensi `stopped` dari dashboard utama, list lisensi aktif default, KPI, dan distribusi status.
+  - Menambahkan filter pencarian tab (Aktif / Dihentikan / Semua) pada halaman daftar lisensi dengan badge status visual abu-abu "Dihentikan".
+  - Menampilkan banner pembuat keputusan di halaman detail lisensi jika status aktif telah expired, dan banner info arsip jika statusnya `stopped`.
+  - Mencatat aksi-aksi ini ke log audit: `license.renewed`, `license.stopped`, dan `license.reactivated`.
+- **Verifikasi Logika Tombol Aksi**: Memastikan tombol "Hentikan" dan "Perpanjang" diatur murni berdasarkan `lifecycle_status` (aktif saat `'active'`, tersembunyi saat `'stopped'`), tidak dipengaruhi oleh status kesehatan lisensi (Aman, Waspada, Kritis, maupun Expired). Tombol "Kirim reminder sekarang" juga dipastikan tetap aktif untuk seluruh lisensi `'active'` termasuk lisensi yang sudah Expired.
+- **Penghapusan Penanda Slot H-0**: Menghapus kalimat penanda dinamis `*(Pengingat Pagi I - Hari Terakhir)*` dan `*(Pengingat Sore II - Hari Terakhir)*` dari isi pesan pengingat hari-H (H-0) agar pesan tampil lebih bersih tanpa embel-embel slot.
+
+### Capaian
+- Fitur jam pengiriman hari-H dinamis selesai dibuat dengan mekanisme idempotensi berbasis slot yang aman, serta visualisasi data riwayat pengingat H-0 otomatis tampil konsisten dan tepat. Pengiriman pesan ganda (3 pesan di hari-H) berhasil dicegah total, dan timeline detail lisensi menyajikan visualisasi riil kedua slot pengiriman secara kronologis. Riwayat pengingat dan statistik jumlah pesan keluar harian kini tetap utuh meskipun data lisensi terkait dihapus oleh pengguna.
+- Fitur persetujuan siklus hidup (Renew / Stop / Reactivate) terintegrasi dengan sempurna. Tombol-tombol kontrol siklus hidup lisensi (Hentikan & Perpanjang) tervalidasi aktif penuh pada seluruh kondisi kesehatan termasuk lisensi Expired (yang status daur hidupnya masih aktif), sementara tombol manual "Kirim reminder sekarang" terbukti hanya dinonaktifkan jika lisensi dihentikan (`'stopped'`).
+
+---
+
+## Ringkasan Capaian 13 Juli – 12 Agustus 2026
 
 - **Minggu 1 (13–17 Juli)**: fondasi Laravel + Tailwind, skema database utama, controller/model utama, sistem berkas privat, mesin scheduling otomatis, integrasi Meta WhatsApp API / Log Gateway, panduan deployment, dan polesan logo sidebar.
 - **Minggu 2 (20–24 Juli)**: implementasi Airy Design, optimasi contrast warna dashboard, perbaikan responsive view mobile, penggabungan filter status, integrasi Fonnte gateway via UI, fitur edit template pesan dinamis, penutupan register publik dengan undangan admin, verifikasi login OTP, dan kustomisasi bg login page.
-- **Minggu 3 & Final (27 Juli–30 agustu)**: pembuatan dropdown select kustom `<x-custom-select>`, penyelarasan tombol aksi di seluruh sistem, integrasi SweetAlert2, penanganan bug notifikasi stuck, perbaikan ikon Kelola Admin yang tidak tampil, dan penyusunan logbook final pengembangan proyek.
+- **Minggu 3 (27 Juli–5 Agustus)**: pembuatan dropdown select kustom `<x-custom-select>`, penyelarasan tombol aksi di seluruh sistem, integrasi SweetAlert2, penanganan bug notifikasi stuck, perbaikan ikon Kelola Admin yang tidak tampil, dan penyusunan logbook harian.
+- **Minggu 4 (6–12 Agustus)**: Fitur template kustomisasi pesan setelah kedaluwarsa (overdue), pemisahan tab template di Pengaturan, serta penambahan input jam alert hari-H kustom di panel Pengaturan lengkap dengan migrasi data historis berbasis posisi slot.

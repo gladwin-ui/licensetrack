@@ -14,7 +14,10 @@ class ReminderScheduler
      */
     public function generateFor(License $license): void
     {
-        $milestones = config('reminder.milestones', [90, 60, 45, 30, 21, 14, 7, 6, 5, 4, 3, 2, 1, 0, -7, -14]);
+        $milestones = array_filter(
+            config('reminder.milestones', [90, 60, 45, 30, 21, 14, 7, 6, 5, 4, 3, 2, 1, 0, -7, -14]),
+            fn($m) => $m !== 0
+        );
         $sendTime = setting('reminder_send_time', config('reminder.send_time', '09:00'));
         
         // Parse the send_time config to get hour and minute

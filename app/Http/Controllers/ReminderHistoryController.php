@@ -22,7 +22,7 @@ class ReminderHistoryController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = WhatsappMessage::with(['reminderLog.license', 'contact.license']);
+        $query = WhatsappMessage::with(['reminderLog.license', 'contact.license', 'urgentAlertLog.license']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

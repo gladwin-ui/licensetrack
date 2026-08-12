@@ -28,6 +28,14 @@ class LicenseController extends Controller
 
         $query = License::with('contacts')->orderBy('end_date', 'asc');
 
+        // Filter by lifecycle_status: active (default) / stopped / all
+        $lifecycleFilter = $request->input('lifecycle_status', 'active');
+        if ($lifecycleFilter === 'active') {
+            $query->where('lifecycle_status', 'active');
+        } elseif ($lifecycleFilter === 'stopped') {
+            $query->where('lifecycle_status', 'stopped');
+        }
+
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
@@ -48,10 +56,11 @@ class LicenseController extends Controller
 
         $licenses = $query->paginate(15)->withQueryString();
 
-        $totalLicenses = License::count();
-        $criticalCount = License::expiringWithin(30)->count();
-        $expiredCount = License::expired()->count();
-        $vendors = License::whereNotNull('vendor')
+        $totalLicenses = License::where('lifecycle_status', 'active')->count();
+        $criticalCount = License::where('lifecycle_status', 'active')->expiringWithin(30)->count();
+        $expiredCount = License::where('lifecycle_status', 'active')->expired()->count();
+        $vendors = License::where('lifecycle_status', 'active')
+            ->whereNotNull('vendor')
             ->distinct()
             ->orderBy('vendor')
             ->pluck('vendor');
@@ -124,13 +133,96 @@ class LicenseController extends Controller
             ->with('success', 'Lisensi berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified license.
-     */
     public function show(License $license): View
     {
         $license->load(['files', 'contacts', 'creator', 'reminderLogs']);
-        return view('licenses.show', compact('license'));
+
+        // Get H-0 settings
+        $time1 = setting('urgent_alert_time_1') ?: '09:00';
+        $time2 = setting('urgent_alert_time_2') ?: '15:00';
+
+        [$hour1, $min1] = explode(':', $time1);
+        [$hour2, $min2] = explode(':', $time2);
+
+        $endDate = $license->end_date->copy()->setTimezone('Asia/Jakarta');
+        $scheduledAt1 = $endDate->copy()->setTime((int)$hour1, (int)$min1);
+        $scheduledAt2 = $endDate->copy()->setTime((int)$hour2, (int)$min2);
+
+        // Fetch urgent logs from database
+        $urgentLog1 = \App\Models\UrgentAlertLog::where('license_id', $license->id)
+            ->where('alert_date', $license->end_date->toDateString())
+            ->where('slot', 'slot_1')
+            ->first();
+
+        $urgentLog2 = \App\Models\UrgentAlertLog::where('license_id', $license->id)
+            ->where('alert_date', $license->end_date->toDateString())
+            ->where('slot', 'slot_2')
+            ->first();
+
+        $today = Carbon::today('Asia/Jakarta');
+        $isFuture = $license->end_date->greaterThanOrEqualTo($today);
+
+        $isStopped = $license->lifecycle_status === 'stopped';
+
+        // Status for slot 1
+        if ($urgentLog1) {
+            $status1 = $urgentLog1->status;
+            $sentAt1 = $urgentLog1->sent_at;
+        } else {
+            $status1 = $isStopped ? 'skipped' : ($isFuture ? 'pending' : 'skipped');
+            $sentAt1 = null;
+        }
+
+        // Status for slot 2
+        if ($urgentLog2) {
+            $status2 = $urgentLog2->status;
+            $sentAt2 = $urgentLog2->sent_at;
+        } else {
+            $status2 = $isStopped ? 'skipped' : ($isFuture ? 'pending' : 'skipped');
+            $sentAt2 = null;
+        }
+
+        // Build the two H-0 timeline items
+        $h0Item1 = (object)[
+            'milestone'    => 'H-0 · Pengiriman 1',
+            'label'        => 'H-0 · Pengiriman 1',
+            'status'       => $status1,
+            'scheduled_at' => $scheduledAt1,
+            'sent_at'      => $sentAt1,
+            'is_urgent'    => true,
+        ];
+
+        $h0Item2 = (object)[
+            'milestone'    => 'H-0 · Pengiriman 2',
+            'label'        => 'H-0 · Pengiriman 2',
+            'status'       => $status2,
+            'scheduled_at' => $scheduledAt2,
+            'sent_at'      => $sentAt2,
+            'is_urgent'    => true,
+        ];
+
+        // Map the regular reminder logs
+        $timelineItems = $license->reminderLogs->map(function ($log) {
+            return (object)[
+                'milestone'    => $log->milestone,
+                'label'        => $log->milestone >= 0 ? 'H-'.$log->milestone : 'H+'.abs($log->milestone),
+                'status'       => $log->status,
+                'scheduled_at' => $log->scheduled_at->copy()->setTimezone('Asia/Jakarta'),
+                'sent_at'      => $log->sent_at ? $log->sent_at->copy()->setTimezone('Asia/Jakarta') : null,
+                'is_urgent'    => false,
+            ];
+        })->toArray();
+
+        // Add the H-0 items
+        $timelineItems[] = $h0Item1;
+        $timelineItems[] = $h0Item2;
+
+        // Sort chronologically DESC (so that later dates/times are at the top)
+        usort($timelineItems, function ($a, $b) {
+            return $b->scheduled_at->timestamp <=> $a->scheduled_at->timestamp;
+        });
+
+        return view('licenses.show', compact('license', 'timelineItems'));
     }
 
     /**
@@ -209,33 +301,129 @@ class LicenseController extends Controller
         $licenseId = $license->id;
 
         DB::transaction(function () use ($license) {
-            $license->load(['files', 'contacts', 'reminderLogs']);
-
-            $contactIds = $license->contacts->pluck('id');
-            $reminderLogIds = $license->reminderLogs->pluck('id');
-
-            DB::table('whatsapp_messages')
-                ->where(function ($query) use ($contactIds, $reminderLogIds) {
-                    $query->whereIn('license_contact_id', $contactIds)
-                        ->orWhereIn('reminder_log_id', $reminderLogIds);
-                })
-                ->delete();
-
-            Storage::disk('licenses')->deleteDirectory((string) $license->id);
-
-            $license->forceDelete();
+            $license->delete();
         });
 
-        AuditLogger::log('license.deleted', ['type' => 'App\Models\License', 'id' => $licenseId], "Lisensi {$licenseName} berhasil dihapus permanen.");
+        AuditLogger::log('license.deleted', ['type' => 'App\Models\License', 'id' => $licenseId], "Lisensi {$licenseName} berhasil dihapus.");
 
         $previousUrl = url()->previous();
         if (str_contains($previousUrl, '/dashboard')) {
             return redirect()->route('dashboard')
-                ->with('success', 'Lisensi berhasil dihapus permanen.');
+                ->with('success', 'Lisensi berhasil dihapus.');
         }
 
         return redirect()->route('licenses.index')
-            ->with('success', 'Lisensi berhasil dihapus permanen.');
+            ->with('success', 'Lisensi berhasil dihapus.');
+    }
+
+    /**
+     * Renew the specified license.
+     */
+    public function renew(Request $request, License $license, ReminderScheduler $scheduler): RedirectResponse
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after:start_date',
+        ], [
+            'start_date.required' => 'Tanggal mulai perpanjangan wajib diisi.',
+            'end_date.required'   => 'Tanggal berakhir perpanjangan wajib diisi.',
+            'end_date.after'      => 'Tanggal berakhir harus setelah tanggal mulai.',
+        ]);
+
+        $oldStartDate = $license->start_date->format('d M Y');
+        $oldEndDate = $license->end_date->format('d M Y');
+
+        DB::transaction(function () use ($license, $validated) {
+            $license->update([
+                'start_date'       => $validated['start_date'],
+                'end_date'         => $validated['end_date'],
+                'lifecycle_status' => 'active',
+                'stopped_at'       => null,
+                'stopped_by'       => null,
+            ]);
+        });
+
+        // Regenerate reminder schedules
+        $scheduler->generateFor($license);
+
+        AuditLogger::log('license.renewed', $license, "Lisensi {$license->name} diperpanjang dari periode {$oldStartDate} - {$oldEndDate} menjadi {$license->start_date->format('d M Y')} - {$license->end_date->format('d M Y')}.");
+
+        return redirect()->route('licenses.show', $license)
+            ->with('success', 'Lisensi berhasil diperpanjang.');
+    }
+
+    /**
+     * Stop the specified license.
+     */
+    public function stop(Request $request, License $license): RedirectResponse
+    {
+        if ($license->lifecycle_status === 'stopped') {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', 'Lisensi sudah dalam status dihentikan.');
+        }
+
+        DB::transaction(function () use ($license) {
+            $license->update([
+                'lifecycle_status' => 'stopped',
+                'stopped_at'       => Carbon::now('Asia/Jakarta'),
+                'stopped_by'       => auth()->id(),
+            ]);
+
+            // Skip any pending or queued reminder logs
+            $license->reminderLogs()->whereIn('status', ['pending', 'queued'])->update([
+                'status' => 'skipped'
+            ]);
+
+            // Skip any pending urgent alert logs
+            \App\Models\UrgentAlertLog::where('license_id', $license->id)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'skipped'
+                ]);
+        });
+
+        AuditLogger::log('license.stopped', $license, "Lisensi {$license->name} dihentikan pemantauannya.");
+
+        return redirect()->route('licenses.show', $license)
+            ->with('success', 'Lisensi berhasil dihentikan.');
+    }
+
+    /**
+     * Reactivate the specified license.
+     */
+    public function reactivate(Request $request, License $license, ReminderScheduler $scheduler): RedirectResponse
+    {
+        if ($license->lifecycle_status !== 'stopped') {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', 'Hanya lisensi yang dihentikan yang dapat diaktifkan kembali.');
+        }
+
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after:start_date',
+        ], [
+            'start_date.required' => 'Tanggal mulai aktif kembali wajib diisi.',
+            'end_date.required'   => 'Tanggal berakhir aktif kembali wajib diisi.',
+            'end_date.after'      => 'Tanggal berakhir harus setelah tanggal mulai.',
+        ]);
+
+        DB::transaction(function () use ($license, $validated) {
+            $license->update([
+                'start_date'       => $validated['start_date'],
+                'end_date'         => $validated['end_date'],
+                'lifecycle_status' => 'active',
+                'stopped_at'       => null,
+                'stopped_by'       => null,
+            ]);
+        });
+
+        // Regenerate reminder schedules
+        $scheduler->generateFor($license);
+
+        AuditLogger::log('license.reactivated', $license, "Lisensi {$license->name} diaktifkan kembali dengan masa berlaku {$license->start_date->format('d M Y')} - {$license->end_date->format('d M Y')}.");
+
+        return redirect()->route('licenses.show', $license)
+            ->with('success', 'Lisensi berhasil diaktifkan kembali.');
     }
 
     // -------------------------------------------------------------------------

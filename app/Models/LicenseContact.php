@@ -28,7 +28,7 @@ class LicenseContact extends Model
 
     public function license(): BelongsTo
     {
-        return $this->belongsTo(License::class);
+        return $this->belongsTo(License::class)->withTrashed();
     }
 
     public function whatsappMessages(): HasMany

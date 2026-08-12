@@ -87,12 +87,34 @@
                         />
                     </div>
                     <div class="flex flex-wrap sm:flex-nowrap gap-2 items-end">
+                        <input type="hidden" name="lifecycle_status" value="{{ request('lifecycle_status', 'active') }}">
                         <button type="submit" class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-2xl text-xs font-semibold hover:from-red-700 hover:to-red-800 transition shadow-md shadow-red-500/20 active:scale-[0.98] whitespace-nowrap">Filter</button>
                         @if (request()->hasAny(['search', 'vendor', 'health']))
-                            <a href="{{ route('licenses.index') }}" class="flex-1 sm:flex-initial justify-center text-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 active:scale-[0.98] transition whitespace-nowrap">Reset</a>
+                            <a href="{{ route('licenses.index', ['lifecycle_status' => request('lifecycle_status', 'active')]) }}" class="flex-1 sm:flex-initial justify-center text-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 active:scale-[0.98] transition whitespace-nowrap">Reset</a>
                         @endif
                     </div>
                 </form>
+            </div>
+
+            {{-- Tabs lifecycle status --}}
+            @php
+                $activeTab = request('lifecycle_status', 'active');
+            @endphp
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <a href="{{ route('licenses.index', array_merge(request()->except(['lifecycle_status', 'page']), ['lifecycle_status' => 'active'])) }}" 
+                       class="shrink-0 border-b-2 py-3 px-1 text-sm font-semibold transition {{ $activeTab === 'active' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        Aktif
+                    </a>
+                    <a href="{{ route('licenses.index', array_merge(request()->except(['lifecycle_status', 'page']), ['lifecycle_status' => 'stopped'])) }}" 
+                       class="shrink-0 border-b-2 py-3 px-1 text-sm font-semibold transition {{ $activeTab === 'stopped' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        Dihentikan
+                    </a>
+                    <a href="{{ route('licenses.index', array_merge(request()->except(['lifecycle_status', 'page']), ['lifecycle_status' => 'all'])) }}" 
+                       class="shrink-0 border-b-2 py-3 px-1 text-sm font-semibold transition {{ $activeTab === 'all' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        Semua
+                    </a>
+                </nav>
             </div>
 
             <div class="bg-white border border-gray-200/70 rounded-xl shadow-sm overflow-hidden">

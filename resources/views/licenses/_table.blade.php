@@ -110,14 +110,20 @@
                                 </div>
                             </div>
                             <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                <div class="h-full rounded-full transition-all duration-300 {{ $days <= 0 ? 'bg-red-500 w-full' : ($days <= 7 ? 'bg-red-600 animate-pulse' : ($days <= 30 ? 'bg-orange-500' : ($days <= 90 ? 'bg-yellow-500' : 'bg-green-500'))) }}"
-                                     style="width: {{ $days <= 0 ? 100 : $progress }}%"></div>
+                                <div class="h-full rounded-full transition-all duration-300 {{ $license->lifecycle_status === 'stopped' ? 'bg-slate-400' : ($days <= 0 ? 'bg-red-500 w-full' : ($days <= 7 ? 'bg-red-600 animate-pulse' : ($days <= 30 ? 'bg-orange-500' : ($days <= 90 ? 'bg-yellow-500' : 'bg-green-500')))) }}"
+                                     style="width: {{ $days <= 0 || $license->lifecycle_status === 'stopped' ? 100 : $progress }}%"></div>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <span class="text-xs {{ $status['class'] }}">
-                                {{ $status['label'] }}
-                            </span>
+                            @if ($license->lifecycle_status === 'stopped')
+                                <span class="text-xs text-slate-500 font-bold">
+                                    Dihentikan
+                                </span>
+                            @else
+                                <span class="text-xs {{ $status['class'] }}">
+                                    {{ $status['label'] }}
+                                </span>
+                            @endif
                         </td>
                         <td class="px-2 py-3">
                             <div class="flex items-center justify-center gap-1">

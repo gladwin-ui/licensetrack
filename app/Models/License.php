@@ -29,6 +29,9 @@ class License extends Model
         'overdue_message_template_id',
         'overdue_message_intro',
         'overdue_message_closing',
+        'lifecycle_status',
+        'stopped_at',
+        'stopped_by',
     ];
 
     protected $casts = [
@@ -59,6 +62,11 @@ class License extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function stoppedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'stopped_by');
     }
 
     public function messageTemplate(): BelongsTo

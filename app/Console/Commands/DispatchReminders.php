@@ -32,7 +32,11 @@ class DispatchReminders extends Command
         $this->info("Starting reminder dispatch process...");
 
         $pendingLogs = ReminderLog::with(['license', 'license.contacts'])
+            ->whereHas('license', function ($q) {
+                $q->where('lifecycle_status', 'active');
+            })
             ->where('status', 'pending')
+            ->where('milestone', '!=', 0)
             ->where('scheduled_at', '<=', Carbon::now('Asia/Jakarta'))
             ->get();
 

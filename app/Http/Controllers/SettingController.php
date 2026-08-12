@@ -78,9 +78,28 @@ class SettingController extends Controller
             'reminder_send_time'    => 'required|date_format:H:i',
             'reminder_company_name' => 'required|string|max:255',
             'wa_gateway'            => 'required|in:log,meta,fonnte',
+            'urgent_alert_time_1'   => 'required|date_format:H:i',
+            'urgent_alert_time_2'   => 'required|date_format:H:i',
         ]);
 
+        $time1 = \Carbon\Carbon::createFromFormat('H:i', $validated['urgent_alert_time_1']);
+        $time2 = \Carbon\Carbon::createFromFormat('H:i', $validated['urgent_alert_time_2']);
+
+        if ($time2->lte($time1)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'urgent_alert_time_2' => ['Waktu pengiriman kedua harus lebih malam dari pengiriman pertama.']
+            ]);
+        }
+
+        if ($time1->diffInMinutes($time2) < 60) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'urgent_alert_time_2' => ['Jarak waktu minimal antara pengiriman pertama dan kedua adalah 1 jam.']
+            ]);
+        }
+
         $oldSendTime = setting('reminder_send_time');
+        $oldTime1 = setting('urgent_alert_time_1', '09:00');
+        $oldTime2 = setting('urgent_alert_time_2', '15:00');
 
         foreach ($validated as $key => $value) {
             Setting::updateOrCreate(
@@ -98,6 +117,14 @@ class SettingController extends Controller
             }
         }
 
+        $statusMessage = 'Pengaturan berhasil disimpan.';
+        $urgentAlertTimeChanged = ($oldTime1 !== $validated['urgent_alert_time_1'] || $oldTime2 !== $validated['urgent_alert_time_2']);
+
+        if ($urgentAlertTimeChanged) {
+            AuditLogger::log('settings.urgent_alert_times_updated', null, "Jadwal pengingat hari-H diperbarui: {$oldTime1}, {$oldTime2} -> {$validated['urgent_alert_time_1']}, {$validated['urgent_alert_time_2']}.");
+            $statusMessage .= ' Jam pengingat hari-H diperbarui. Slot yang waktunya sudah lewat dan belum terkirim akan dikirim pada pengecekan berikutnya.';
+        }
+
         // Check if send time changed, regenerate schedules
         if ($oldSendTime !== $validated['reminder_send_time']) {
             $activeLicenses = License::whereIn('status', ['active', 'renewed'])->get();
@@ -108,13 +135,15 @@ class SettingController extends Controller
             AuditLogger::log('settings.updated', null, "Pengaturan sistem diperbarui (Jam kirim diubah). Gateway: {$validated['wa_gateway']}, Perusahaan: {$validated['reminder_company_name']}, Jam Kirim: {$validated['reminder_send_time']}.");
 
             return redirect()->route('settings.index')
-                ->with('status', 'Pengaturan berhasil disimpan. Jam kirim reminder telah diubah, jadwal pending disesuaikan ulang.');
+                ->with('status', $statusMessage . ' Jam kirim reminder telah diubah, jadwal pending disesuaikan ulang.');
         }
 
-        AuditLogger::log('settings.updated', null, "Pengaturan sistem diperbarui. Gateway: {$validated['wa_gateway']}, Perusahaan: {$validated['reminder_company_name']}, Jam Kirim: {$validated['reminder_send_time']}.");
+        if (!$urgentAlertTimeChanged) {
+            AuditLogger::log('settings.updated', null, "Pengaturan sistem diperbarui. Gateway: {$validated['wa_gateway']}, Perusahaan: {$validated['reminder_company_name']}, Jam Kirim: {$validated['reminder_send_time']}.");
+        }
 
         return redirect()->route('settings.index')
-            ->with('status', 'Pengaturan berhasil disimpan.');
+            ->with('status', $statusMessage);
     }
 
     public function sendTest(Request $request, WhatsAppGateway $gateway)
