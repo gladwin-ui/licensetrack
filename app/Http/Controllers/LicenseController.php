@@ -301,6 +301,24 @@ class LicenseController extends Controller
         $licenseId = $license->id;
 
         DB::transaction(function () use ($license) {
+            $license->update([
+                'lifecycle_status' => 'stopped',
+                'stopped_at'       => Carbon::now('Asia/Jakarta'),
+                'stopped_by'       => auth()->id(),
+            ]);
+
+            // Skip any pending or queued reminder logs
+            $license->reminderLogs()->whereIn('status', ['pending', 'queued'])->update([
+                'status' => 'skipped'
+            ]);
+
+            // Skip any pending urgent alert logs
+            \App\Models\UrgentAlertLog::where('license_id', $license->id)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'skipped'
+                ]);
+
             $license->delete();
         });
 

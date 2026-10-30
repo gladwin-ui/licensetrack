@@ -38,10 +38,21 @@ class SendWhatsAppReminder implements ShouldQueue
      */
     public function handle(WhatsAppGateway $gateway, ReminderMessageBuilder $messageBuilder): void
     {
+        // Don't send if already skipped
+        if ($this->reminderLog->status === 'skipped') {
+            return;
+        }
+
         $this->reminderLog->loadMissing(['license', 'license.contacts', 'license.messageTemplate']);
         $license = $this->reminderLog->license;
 
-        if (!$license || $license->contacts->isEmpty()) {
+        // If license is missing, soft-deleted, or lifecycle is stopped, cancel reminder
+        if (!$license || $license->trashed() || $license->lifecycle_status === 'stopped') {
+            $this->reminderLog->update(['status' => 'skipped']);
+            return;
+        }
+
+        if ($license->contacts->isEmpty()) {
             $this->reminderLog->update(['status' => 'failed']);
             return;
         }

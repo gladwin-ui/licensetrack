@@ -74,6 +74,10 @@ class ReminderHistoryController extends Controller
         }
         
         $license = $message->reminderLog ? $message->reminderLog->license : $contact->license;
+        if (!$license || $license->trashed() || $license->lifecycle_status === 'stopped') {
+            return back()->with('error', 'Lisensi terkait telah dihapus atau dihentikan, pengingat tidak dapat dicoba ulang.');
+        }
+
         $milestone = $message->reminderLog ? $message->reminderLog->milestone : 0;
 
         $builder = app(ReminderMessageBuilder::class);
@@ -128,6 +132,7 @@ class ReminderHistoryController extends Controller
 
         $licenses = License::with(['contacts', 'messageTemplate'])
             ->whereIn('status', ['active', 'renewed'])
+            ->where('lifecycle_status', 'active')
             ->whereDate('end_date', '>=', $today)
             ->whereDate('end_date', '<=', $today->copy()->addDays(7))
             ->get();

@@ -204,6 +204,22 @@ Disusun berdasarkan riwayat percakapan dan aktivitas pengembangan.
 
 ---
 
+## 30 Oktober 2026 — Perbaikan Bug: Penghentian Total Pengiriman Pesan WhatsApp untuk Lisensi Terhapus
+
+### Aktivitas
+- Menganalisis alur *soft-delete* pada `LicenseController@destroy` dan proses penarikan log pada scheduler `reminders:dispatch` serta job antrean `SendWhatsAppReminder`.
+- Mengubah alur penghapusan lisensi pada `LicenseController@destroy` agar secara otomatis menyetel `lifecycle_status` menjadi `'stopped'`, mencatat metadata pemutus (`stopped_at` dan `stopped_by`), serta membatalkan antrean `reminder_logs` dan `urgent_alert_logs` yang berstatus `pending` atau `queued` menjadi `skipped`.
+- Menambahkan filter eksplisit `->whereNull('deleted_at')` pada query `whereHas('license')` di `DispatchReminders` agar tidak menjaring lisensi yang sudah dihapus secara soft-delete.
+- Memperbaiki pengkondisian pengecekan lisensi pada `DispatchReminders` dengan menyertakan `$license->trashed()` dan status daur hidup lisensi `'stopped'`.
+- Menambahkan *guard clause* pada Job `SendWhatsAppReminder` agar langsung berhenti dan menandai log sebagai `skipped` apabila lisensi berstatus `trashed()` atau `lifecycle_status === 'stopped'`.
+- Memperbarui proteksi pada `ReminderHistoryController@retry` untuk menolak percobaan pengiriman ulang pesan gagal apabila lisensi terkait sudah dihapus atau dihentikan.
+- Membuat dan menjalankan migrasi database `2026_10_30_234000_skip_pending_reminders_for_deleted_licenses` untuk mengubah status lisensi terhapus sebelumnya menjadi `stopped` dan membatalkan seluruh log pengingat pending lama yang masih tersisa.
+
+### Capaian
+- Pengiriman pesan WhatsApp ke PIC untuk lisensi yang sudah dihapus berhasil dihentikan secara tuntas di semua lapisan (controller, scheduler command, queue job, dan history retry), dan data antrean pending lama di database telah dibersihkan menjadi `skipped`.
+
+---
+
 ## Ringkasan Capaian 13 Juli – 12 Agustus 2026
 
 - **Minggu 1 (13–17 Juli)**: fondasi Laravel + Tailwind, skema database utama, controller/model utama, sistem berkas privat, mesin scheduling otomatis, integrasi Meta WhatsApp API / Log Gateway, panduan deployment, dan polesan logo sidebar.

@@ -33,7 +33,8 @@ class DispatchReminders extends Command
 
         $pendingLogs = ReminderLog::with(['license', 'license.contacts'])
             ->whereHas('license', function ($q) {
-                $q->where('lifecycle_status', 'active');
+                $q->where('lifecycle_status', 'active')
+                  ->whereNull('deleted_at');
             })
             ->where('status', 'pending')
             ->where('milestone', '!=', 0)
@@ -52,15 +53,15 @@ class DispatchReminders extends Command
         foreach ($pendingLogs as $log) {
             $license = $log->license;
 
-            // b. If the license is soft-deleted, relation returns null
-            if (!$license) {
+            // b. If the license is soft-deleted or null
+            if (!$license || $license->trashed()) {
                 $log->update(['status' => 'skipped']);
                 $skippedCount++;
                 continue;
             }
 
-            // a. If the license status is renewed or cancelled
-            if (in_array($license->status, ['renewed', 'cancelled'])) {
+            // a. If the license status is renewed or cancelled, or lifecycle is stopped
+            if (in_array($license->status, ['renewed', 'cancelled']) || $license->lifecycle_status === 'stopped') {
                 $log->update(['status' => 'skipped']);
                 $skippedCount++;
                 continue;
